@@ -8,12 +8,7 @@ import { inquirySchema, type InquiryInput } from "@/lib/validation/inquiry";
 import { interestAreas } from "@/lib/content";
 import { CONTACT_INTEREST_EVENT } from "@/lib/scrollToContact";
 import type { InterestArea } from "@/lib/content";
-
-declare global {
-  interface Window {
-    onRapTurnstileVerified?: (token: string) => void;
-  }
-}
+import { useTurnstile } from "@/lib/useTurnstile";
 
 type SubmitState = "idle" | "submitting" | "success" | "error";
 
@@ -41,15 +36,10 @@ export function StakeholderInquiryForm() {
     },
   });
 
-  useEffect(() => {
-    window.onRapTurnstileVerified = (token: string) => {
-      setTurnstileToken(token);
-      setValue("turnstileToken", token);
-    };
-    return () => {
-      window.onRapTurnstileVerified = undefined;
-    };
-  }, [setValue]);
+  const turnstileContainerRef = useTurnstile(siteKey, (token) => {
+    setTurnstileToken(token);
+    setValue("turnstileToken", token);
+  });
 
   useEffect(() => {
     function handlePreset(e: Event) {
@@ -189,7 +179,7 @@ export function StakeholderInquiryForm() {
         {siteKey && (
           <>
             <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" strategy="afterInteractive" />
-            <div className="cf-turnstile" data-sitekey={siteKey} data-callback="onRapTurnstileVerified" />
+            <div ref={turnstileContainerRef} />
           </>
         )}
 

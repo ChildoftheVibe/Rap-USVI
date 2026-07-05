@@ -1,16 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Script from "next/script";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { newsletterSignupSchema, type NewsletterSignupInput } from "@/lib/validation/newsletter";
-
-declare global {
-  interface Window {
-    onRapNewsletterTurnstileVerified?: (token: string) => void;
-  }
-}
+import { useTurnstile } from "@/lib/useTurnstile";
 
 type SubmitState = "idle" | "submitting" | "success" | "error";
 
@@ -31,15 +26,10 @@ export function NewsletterSignupForm() {
     defaultValues: { email: "", company: "", turnstileToken: "" },
   });
 
-  useEffect(() => {
-    window.onRapNewsletterTurnstileVerified = (token: string) => {
-      setTurnstileToken(token);
-      setValue("turnstileToken", token);
-    };
-    return () => {
-      window.onRapNewsletterTurnstileVerified = undefined;
-    };
-  }, [setValue]);
+  const turnstileContainerRef = useTurnstile(siteKey, (token) => {
+    setTurnstileToken(token);
+    setValue("turnstileToken", token);
+  });
 
   async function onSubmit(data: NewsletterSignupInput) {
     if (!turnstileToken) {
@@ -116,7 +106,7 @@ export function NewsletterSignupForm() {
       {siteKey && (
         <>
           <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" strategy="afterInteractive" />
-          <div className="cf-turnstile" data-sitekey={siteKey} data-callback="onRapNewsletterTurnstileVerified" />
+          <div ref={turnstileContainerRef} />
         </>
       )}
 
