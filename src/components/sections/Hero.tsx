@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { PlaceholderImage } from "@/components/ui/PlaceholderImage";
 import { openJoinModal } from "@/components/cta/JoinMovementModal";
 import { mission } from "@/lib/content";
 
@@ -7,10 +6,13 @@ export function Hero() {
   return (
     <section className="relative flex min-h-[85vh] items-center overflow-hidden">
       <div className="absolute inset-0 z-0">
-        <PlaceholderImage
-          label="U.S. Virgin Islands coastline at sunrise"
-          variant="primary"
-          className="h-full w-full"
+        <Image
+          src="/images/hero-coastline.jpg"
+          alt="U.S. Virgin Islands coastline at sunset"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
         />
         <div className="hero-gradient absolute inset-0" />
       </div>

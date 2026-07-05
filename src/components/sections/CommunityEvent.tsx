@@ -1,4 +1,4 @@
-import { PlaceholderImage } from "@/components/ui/PlaceholderImage";
+import Image from "next/image";
 import { AddToCalendarButton } from "@/components/cta/AddToCalendarButton";
 import { event } from "@/lib/content";
 
@@ -8,7 +8,13 @@ export function CommunityEvent() {
       <div className="mx-auto max-w-container-max px-margin-mobile md:px-margin-desktop">
         <div className="flex flex-col overflow-hidden rounded-3xl bg-white shadow-2xl lg:flex-row">
           <div className="relative h-96 lg:h-auto lg:w-1/2">
-            <PlaceholderImage label="Point Udall, St. Croix" variant="sand" className="h-full w-full" />
+            <Image
+              src="/images/point-udall.jpg"
+              alt="Point Udall, St. Croix"
+              fill
+              sizes="(min-width: 1024px) 50vw, 100vw"
+              className="object-cover"
+            />
             <div className="absolute left-8 top-8 min-w-[100px] rounded-lg bg-harvest-gold p-4 text-center text-primary shadow-lg">
               <span className="block text-2xl font-bold">{event.dateLabel}</span>
               <span className="text-sm font-bold">{event.yearLabel}</span>

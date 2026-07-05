@@ -1,5 +1,5 @@
-import { PlaceholderImage } from "@/components/ui/PlaceholderImage";
-import { mission } from "@/lib/content";
+import Image from "next/image";
+import { mission, contact } from "@/lib/content";
 
 export function MissionOverview() {
   return (
@@ -28,10 +28,12 @@ export function MissionOverview() {
           </div>
           <div className="lg:col-span-5">
             <div className="relative h-[500px] overflow-hidden rounded-2xl border-8 border-white shadow-2xl">
-              <PlaceholderImage
-                label="Portrait of civic leadership and engagement"
-                variant="teal"
-                className="h-full w-full"
+              <Image
+                src="/images/leadership-portrait.jpg"
+                alt={`${contact.chairman}, ${contact.chairmanTitle} of Restore America's Paradise`}
+                fill
+                sizes="(min-width: 1024px) 40vw, 100vw"
+                className="object-cover"
               />
               <div className="glass-panel absolute bottom-0 left-0 right-0 border-t border-outline-variant p-8">
                 <blockquote className="font-[family-name:var(--font-headline)] italic text-primary">
