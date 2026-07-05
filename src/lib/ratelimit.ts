@@ -3,15 +3,16 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 const WINDOW_MINUTES = 10;
 const MAX_SUBMISSIONS_PER_WINDOW = 5;
 
-/** Simple sliding-window rate limit backed by the inquiries table itself — no extra infra. */
+/** Simple sliding-window rate limit backed by the target table itself — no extra infra. */
 export async function isRateLimited(
   supabase: SupabaseClient,
-  ipHash: string
+  ipHash: string,
+  table: "inquiries" | "newsletter_signups" = "inquiries"
 ): Promise<boolean> {
   const windowStart = new Date(Date.now() - WINDOW_MINUTES * 60_000).toISOString();
 
   const { count, error } = await supabase
-    .from("inquiries")
+    .from(table)
     .select("id", { count: "exact", head: true })
     .eq("ip_hash", ipHash)
     .gte("created_at", windowStart);

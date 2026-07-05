@@ -9,7 +9,7 @@ const csp = [
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
   "img-src 'self' data: blob:",
-  "frame-src https://challenges.cloudflare.com https://*.zeffy.com",
+  "frame-src https://challenges.cloudflare.com",
   `connect-src 'self' ${isDev ? "ws: http://localhost:*" : ""} https://challenges.cloudflare.com https://*.supabase.co https://*.posthog.com https://*.sentry.io`,
   "object-src 'none'",
   "base-uri 'self'",

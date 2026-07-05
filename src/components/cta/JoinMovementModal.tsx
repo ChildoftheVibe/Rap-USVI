@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { NewsletterSignupForm } from "@/components/forms/NewsletterSignupForm";
 
 const OPEN_EVENT = "rap:open-join-modal";
 
@@ -10,7 +11,6 @@ export function openJoinModal(): void {
 
 export function JoinMovementModal() {
   const [open, setOpen] = useState(false);
-  const embedUrl = process.env.NEXT_PUBLIC_ZEFFY_SIGNUP_EMBED_URL;
 
   useEffect(() => {
     function handleOpen() {
@@ -57,19 +57,7 @@ export function JoinMovementModal() {
           </button>
         </div>
 
-        {embedUrl ? (
-          <iframe
-            src={embedUrl}
-            title="Join the Movement — Email Signup"
-            loading="lazy"
-            className="h-[480px] w-full rounded-md border-0"
-          />
-        ) : (
-          <p className="text-on-surface-variant">
-            Sign-up is coming soon. In the meantime, reach us directly using the contact
-            information below.
-          </p>
-        )}
+        <NewsletterSignupForm />
       </div>
     </div>
   );

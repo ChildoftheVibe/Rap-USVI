@@ -23,12 +23,11 @@ See `.env.local.example` for the full list. Summary:
 
 | Service | Purpose | Required for |
 |---|---|---|
-| Supabase | Stores Stakeholder Inquiry submissions | Form to work at all |
+| Supabase | Stores Stakeholder Inquiry submissions and "Join the Movement" newsletter signups | Forms to work at all |
 | Resend | Staff notification + submitter auto-reply email | Email notifications |
-| Cloudflare Turnstile | Spam/bot protection on the form | Production (falls back open in dev without a key) |
+| Cloudflare Turnstile | Spam/bot protection on the forms | Production (falls back open in dev without a key) |
 | PostHog | Site analytics | Optional |
 | Sentry | Error monitoring | Optional |
-| Zeffy | "Join the Movement" signup embed | Optional — shows a fallback message until set |
 
 The Supabase `SUPABASE_SERVICE_ROLE_KEY` is not retrievable via any automated tool — copy it from
 the Supabase dashboard: Project Settings → API → `service_role` secret.
