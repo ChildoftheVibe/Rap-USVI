@@ -12,7 +12,7 @@ export const site = {
 export const contact = {
   phone: "(904) 907-6011",
   phoneHref: "tel:+19049076011",
-  emails: ["earl@nigc-llc.com", "Elphillip@hotmail.com"],
+  emails: ["info@rap-usvi.org", "Donate@rap-usvi.org"],
   location: "St. Croix, U.S. Virgin Islands",
   chairman: "Earl L. Philip",
   chairmanTitle: "Chairman / President",
