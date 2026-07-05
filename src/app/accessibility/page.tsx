@@ -3,6 +3,8 @@ import { site, contact } from "@/lib/content";
 
 export const metadata: Metadata = { title: `Accessibility Statement | ${site.name}` };
 
+const accessibilityContactEmails = ["info@rap-usvi.org"];
+
 export default function AccessibilityPage() {
   return (
     <div className="mx-auto max-w-3xl px-margin-mobile py-24 md:px-margin-desktop">
@@ -18,7 +20,7 @@ export default function AccessibilityPage() {
         <p>
           If you encounter any barrier to accessing content or using any feature on this site,
           please let us know so we can address it:{" "}
-          {contact.emails.map((email, i) => (
+          {accessibilityContactEmails.map((email, i) => (
             <span key={email}>
               {i > 0 && " or "}
               <a href={`mailto:${email}`} className="text-primary hover:underline">
