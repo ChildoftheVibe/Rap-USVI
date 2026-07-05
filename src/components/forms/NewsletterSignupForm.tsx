@@ -42,6 +42,11 @@ export function NewsletterSignupForm() {
   }, [setValue]);
 
   async function onSubmit(data: NewsletterSignupInput) {
+    if (!turnstileToken) {
+      setErrorMessage("Please complete the verification check above, then try again.");
+      setState("error");
+      return;
+    }
     setState("submitting");
     setErrorMessage("");
     try {

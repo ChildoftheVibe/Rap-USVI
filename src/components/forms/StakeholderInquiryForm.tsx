@@ -61,6 +61,11 @@ export function StakeholderInquiryForm() {
   }, [setValue]);
 
   async function onSubmit(data: InquiryInput) {
+    if (!turnstileToken) {
+      setErrorMessage("Please complete the verification check above, then try again.");
+      setState("error");
+      return;
+    }
     setState("submitting");
     setErrorMessage("");
     try {
