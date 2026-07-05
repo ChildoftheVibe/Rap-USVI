@@ -17,7 +17,7 @@ export function MissionOverview() {
             <div className="mt-12 grid gap-6 md:grid-cols-2">
               {mission.featureCards.map((card) => (
                 <div key={card.title} className="rounded-lg border border-outline-variant bg-island-sand p-6">
-                  <span className="material-symbols-outlined mb-4 block text-3xl text-primary">
+                  <span className="material-symbols-outlined mb-4 block text-3xl text-primary" aria-hidden="true">
                     {card.icon}
                   </span>
                   <h4 className="mb-2 font-medium uppercase text-primary">{card.title}</h4>

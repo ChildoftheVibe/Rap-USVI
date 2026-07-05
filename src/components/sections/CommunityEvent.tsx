@@ -25,7 +25,7 @@ export function CommunityEvent() {
               {event.name}
             </h2>
             <div className="mb-8 flex items-center gap-3 text-caribbean-azure">
-              <span className="material-symbols-outlined">location_on</span>
+              <span className="material-symbols-outlined" aria-hidden="true">location_on</span>
               <span className="font-medium">
                 {event.location} | {event.time}
               </span>
@@ -33,7 +33,7 @@ export function CommunityEvent() {
             <p className="mb-8 leading-relaxed text-on-surface-variant">{event.description}</p>
             <div className="mb-8 flex items-center gap-4 rounded-lg border border-outline-variant bg-surface p-6">
               <div className="flex h-16 w-16 items-center justify-center rounded-chip bg-primary text-white">
-                <span className="material-symbols-outlined">person</span>
+                <span className="material-symbols-outlined" aria-hidden="true">person</span>
               </div>
               <div>
                 <p className="text-xs uppercase tracking-wider text-on-surface-variant">

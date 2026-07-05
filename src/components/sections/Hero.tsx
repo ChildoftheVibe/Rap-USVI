@@ -27,11 +27,7 @@ export function Hero() {
           </h1>
           <p className="max-w-xl text-lg text-white/90">{"A movement dedicated to the restoration, revitalization, and preservation of the cultural, economic, and environmental vitality of our islands through responsible governance and civic pride."}</p>
           <div className="flex flex-wrap gap-4 pt-4">
-            <button
-              type="button"
-              onClick={openJoinModal}
-              className="rounded-lg bg-white px-8 py-4 font-medium text-primary shadow-xl transition-all hover:bg-island-sand active:scale-95"
-            >
+            <button type="button" onClick={openJoinModal} className="btn btn-lg btn-white w-full sm:w-max">
               Join the Movement
             </button>
           </div>

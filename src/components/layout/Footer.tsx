@@ -28,11 +28,11 @@ export function Footer() {
             Accessibility
           </Link>
         </div>
-        <p className="max-w-2xl text-center text-sm text-white/70">
+        <p className="max-w-2xl text-center text-sm text-white/80">
           {site.legalName} is a tax-exempt 501(c)(3) organization. Donations are tax-deductible to
           the extent allowed by law.
         </p>
-        <p className="mt-4 text-xs text-white/50">
+        <p className="mt-4 text-xs text-white/70">
           © {new Date().getFullYear()} {site.legalName}. All rights reserved.
         </p>
       </div>

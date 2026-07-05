@@ -51,9 +51,11 @@ export function JoinMovementModal() {
             type="button"
             onClick={() => setOpen(false)}
             aria-label="Close"
-            className="text-on-surface-variant hover:text-primary"
+            className="-mr-2 flex h-11 w-11 items-center justify-center rounded-md text-on-surface-variant transition-colors hover:text-primary"
           >
-            <span className="material-symbols-outlined">close</span>
+            <span className="material-symbols-outlined" aria-hidden="true">
+              close
+            </span>
           </button>
         </div>
 

@@ -188,7 +188,7 @@ export function StakeholderInquiryForm() {
         <button
           type="submit"
           disabled={state === "submitting"}
-          className="w-full rounded-lg bg-primary py-4 font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="btn btn-lg btn-primary w-full"
         >
           {state === "submitting" ? "Submitting…" : "Submit Inquiry"}
         </button>

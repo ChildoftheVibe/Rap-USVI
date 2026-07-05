@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { openJoinModal } from "@/components/cta/JoinMovementModal";
 import { DonateButton } from "@/components/cta/DonateButton";
 import { site } from "@/lib/content";
@@ -13,34 +14,99 @@ const NAV_LINKS = [
 ];
 
 export function Header() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // Close the mobile menu on Escape for keyboard users.
+  useEffect(() => {
+    if (!menuOpen) return;
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setMenuOpen(false);
+    }
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [menuOpen]);
+
+  function handleJoin() {
+    setMenuOpen(false);
+    openJoinModal();
+  }
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-outline-variant bg-surface">
-      <nav className="mx-auto flex max-w-container-max items-center justify-between px-margin-mobile py-md md:px-margin-desktop">
-        <a href="#" className="font-[family-name:var(--font-headline)] text-xl font-bold tracking-tight text-primary md:text-2xl">
+      <nav
+        aria-label="Primary"
+        className="mx-auto flex max-w-container-max items-center justify-between gap-4 px-margin-mobile py-3 md:px-margin-desktop"
+      >
+        <a
+          href="#"
+          className="rounded-md font-[family-name:var(--font-headline)] text-lg font-bold tracking-tight text-primary md:text-2xl"
+        >
           {site.name}
         </a>
-        <div className="hidden items-center gap-8 md:flex">
+
+        {/* Desktop navigation */}
+        <div className="hidden items-center gap-6 lg:flex xl:gap-8">
           {NAV_LINKS.map((link) => (
             <a
               key={link.href}
               href={link.href}
-              className="text-on-surface-variant transition-colors hover:text-primary"
+              className="rounded-md px-1 py-1 text-on-surface-variant transition-colors hover:text-primary"
             >
               {link.label}
             </a>
           ))}
         </div>
-        <div className="flex items-center gap-4">
-          <button
-            type="button"
-            onClick={openJoinModal}
-            className="rounded-lg bg-primary px-6 py-2 font-medium text-white transition-all active:scale-95"
-          >
+
+        {/* Desktop actions */}
+        <div className="hidden items-center gap-3 md:flex">
+          <button type="button" onClick={handleJoin} className="btn btn-sm btn-primary">
             Join Us
           </button>
           <DonateButton />
         </div>
+
+        {/* Mobile hamburger */}
+        <button
+          type="button"
+          className="btn btn-sm btn-outline aspect-square !min-h-[2.75rem] !min-w-[2.75rem] !px-0 md:hidden"
+          aria-label={menuOpen ? "Close menu" : "Open menu"}
+          aria-expanded={menuOpen}
+          aria-controls="mobile-menu"
+          onClick={() => setMenuOpen((v) => !v)}
+        >
+          <span className="material-symbols-outlined" aria-hidden="true">
+            {menuOpen ? "close" : "menu"}
+          </span>
+        </button>
       </nav>
+
+      {/* Mobile menu panel */}
+      {menuOpen && (
+        <div
+          id="mobile-menu"
+          className="border-t border-outline-variant bg-surface px-margin-mobile pb-6 pt-2 md:hidden"
+        >
+          <ul className="flex flex-col">
+            {NAV_LINKS.map((link) => (
+              <li key={link.href}>
+                <a
+                  href={link.href}
+                  onClick={() => setMenuOpen(false)}
+                  className="block rounded-md py-3 text-base text-on-surface-variant transition-colors hover:text-primary"
+                >
+                  {link.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-4 flex flex-col gap-3">
+            <button type="button" onClick={handleJoin} className="btn btn-md btn-primary w-full">
+              Join Us
+            </button>
+            <DonateButton className="btn btn-md btn-gold w-full" />
+          </div>
+        </div>
+      )}
     </header>
   );
 }

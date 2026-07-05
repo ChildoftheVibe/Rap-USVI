@@ -7,7 +7,7 @@ export function EnrollmentButton() {
     <button
       type="button"
       onClick={() => scrollToContactWithInterest("academy_enrollment")}
-      className="w-max rounded-lg bg-harvest-gold px-10 py-4 font-medium text-primary shadow-lg transition-all hover:brightness-110"
+      className="btn btn-lg btn-gold w-full shadow-lg sm:w-max"
     >
       Inquire About Enrollment
     </button>

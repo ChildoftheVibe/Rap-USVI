@@ -36,6 +36,7 @@ export function Pillars() {
               className={`group rounded-lg border-t-4 bg-white p-8 shadow-sm transition-all duration-300 hover:shadow-xl ${ACCENT_BORDER[pillar.accent]}`}
             >
               <span
+                aria-hidden="true"
                 className={`material-symbols-outlined mb-6 block text-4xl transition-transform group-hover:scale-110 ${ACCENT_TEXT[pillar.accent]}`}
               >
                 {pillar.icon}

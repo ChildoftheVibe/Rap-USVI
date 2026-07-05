@@ -97,6 +97,121 @@ body {
   color: var(--foreground);
 }
 
+/* ---------------------------------------------------------------------------
+   Accessible focus indicators (WCAG 2.4.7 / 1.4.11)
+   A single visible focus style for every interactive element. The two-tone
+   ring (primary color + light offset gap) keeps the indicator visible on BOTH
+   light page sections and the dark blue (#0047ab) sections, meeting the 3:1
+   non-text contrast requirement against whichever background sits behind it.
+--------------------------------------------------------------------------- */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--color-surface),
+    0 0 0 4px var(--color-primary);
+}
+
+/* ---------------------------------------------------------------------------
+   Button design system
+   One reusable, accessible button. Every variant guarantees a >=44px touch
+   target (WCAG 2.5.5 AAA / 2.5.8 AA), a visible focus ring, and consistent
+   motion that respects prefers-reduced-motion (handled globally below).
+--------------------------------------------------------------------------- */
+@layer components {
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.75rem; /* 44px touch target */
+    border-radius: var(--radius-lg);
+    font-weight: 500;
+    line-height: 1.2;
+    text-align: center;
+    white-space: nowrap;
+    transition:
+      background-color 200ms ease,
+      color 200ms ease,
+      transform 120ms ease,
+      filter 200ms ease,
+      box-shadow 200ms ease;
+  }
+
+  .btn:active {
+    transform: scale(0.96);
+  }
+
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Sizes — padding scales up from mobile to desktop so the same button reads
+     compact in a header and generous as a section CTA. */
+  .btn-sm {
+    min-height: 2.5rem; /* 40px — still >= the 24px AA minimum, comfortable in-header */
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  .btn-md {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.9375rem;
+  }
+  @media (min-width: 768px) {
+    .btn-md {
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+    }
+  }
+
+  .btn-lg {
+    padding: 0.875rem 1.75rem;
+    font-size: 1rem;
+  }
+  @media (min-width: 768px) {
+    .btn-lg {
+      padding: 1rem 2.5rem;
+    }
+  }
+
+  /* Variants */
+  .btn-primary {
+    background-color: var(--color-primary);
+    color: #ffffff;
+  }
+  .btn-primary:hover {
+    background-color: color-mix(in srgb, var(--color-primary) 90%, #000);
+  }
+
+  .btn-gold {
+    background-color: var(--color-harvest-gold);
+    color: var(--color-primary);
+  }
+  .btn-gold:hover {
+    filter: brightness(1.08);
+  }
+
+  .btn-white {
+    background-color: #ffffff;
+    color: var(--color-primary);
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  }
+  .btn-white:hover {
+    background-color: var(--color-island-sand);
+  }
+
+  .btn-outline {
+    border: 2px solid var(--color-primary);
+    color: var(--color-primary);
+    background-color: transparent;
+  }
+  .btn-outline:hover {
+    background-color: var(--color-primary);
+    color: #ffffff;
+  }
+}
+
 /* Recreated from scratch: referenced in code.html but not defined anywhere in
    the exported mockup (Stitch-internal stylesheet not captured on export). */
 .hero-gradient {
@@ -148,5 +263,11 @@ body {
   .animate-fade-in,
   .animate-pulse-slow {
     animation: none;
+  }
+  .btn {
+    transition: none;
+  }
+  .btn:active {
+    transform: none;
   }
 }

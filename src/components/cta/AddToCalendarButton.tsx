@@ -7,7 +7,7 @@ export function AddToCalendarButton() {
     <button
       type="button"
       onClick={downloadPrayerEventIcs}
-      className="rounded-lg border-2 border-primary px-10 py-4 font-medium text-primary transition-all hover:bg-primary hover:text-white"
+      className="btn btn-lg btn-outline w-full sm:w-max"
     >
       Add to Calendar
     </button>

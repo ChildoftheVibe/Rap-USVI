@@ -14,7 +14,7 @@ export function Academy() {
                     key={track.label}
                     className="rounded-lg border border-white/20 bg-white/10 p-6 transition-colors hover:bg-white/20"
                   >
-                    <span className="material-symbols-outlined mb-4 block text-3xl text-harvest-gold">
+                    <span className="material-symbols-outlined mb-4 block text-3xl text-harvest-gold" aria-hidden="true">
                       {track.icon}
                     </span>
                     <h5 className="font-medium uppercase">{track.label}</h5>
@@ -27,7 +27,7 @@ export function Academy() {
                     key={track.label}
                     className="rounded-lg border border-white/20 bg-white/10 p-6 transition-colors hover:bg-white/20"
                   >
-                    <span className="material-symbols-outlined mb-4 block text-3xl text-harvest-gold">
+                    <span className="material-symbols-outlined mb-4 block text-3xl text-harvest-gold" aria-hidden="true">
                       {track.icon}
                     </span>
                     <h5 className="font-medium uppercase">{track.label}</h5>

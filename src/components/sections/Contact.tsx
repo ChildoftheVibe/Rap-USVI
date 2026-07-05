@@ -17,7 +17,7 @@ export function Contact() {
             </p>
             <div className="space-y-6">
               <div className="flex gap-4">
-                <span className="material-symbols-outlined text-harvest-gold">call</span>
+                <span className="material-symbols-outlined text-harvest-gold" aria-hidden="true">call</span>
                 <div>
                   <p className="font-medium text-primary">Primary Phone</p>
                   <a href={contact.phoneHref} className="text-lg hover:underline">
@@ -26,7 +26,7 @@ export function Contact() {
                 </div>
               </div>
               <div className="flex gap-4">
-                <span className="material-symbols-outlined text-harvest-gold">mail</span>
+                <span className="material-symbols-outlined text-harvest-gold" aria-hidden="true">mail</span>
                 <div>
                   <p className="font-medium text-primary">Official Email</p>
                   {contact.emails.map((email) => (
@@ -37,7 +37,7 @@ export function Contact() {
                 </div>
               </div>
               <div className="flex gap-4">
-                <span className="material-symbols-outlined text-harvest-gold">location_on</span>
+                <span className="material-symbols-outlined text-harvest-gold" aria-hidden="true">location_on</span>
                 <div>
                   <p className="font-medium text-primary">Base Location</p>
                   <p className="text-lg">{contact.location}</p>
