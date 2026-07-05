@@ -1,0 +1,394 @@
+<!DOCTYPE html><html class="scroll-smooth" lang="en" style=""><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=block" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&amp;family=Public+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet"><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">try{
+        try {
+            tailwind.config = {
+                darkMode: "class",
+                theme: {
+                    extend: {
+                        "colors": {
+                            "outline": "#737784",
+                            "error": "#ba1a1a",
+                            "secondary-fixed-dim": "#76d6d5",
+                            "on-primary-fixed": "#001946",
+                            "on-background": "#191c1d",
+                            "tertiary-fixed-dim": "#ffb59c",
+                            "on-secondary-fixed-variant": "#004f4f",
+                            "inverse-surface": "#2e3132",
+                            "surface": "#f8f9fa",
+                            "tertiary-container": "#8d2c00",
+                            "secondary": "#006a6a",
+                            "outline-variant": "#c3c6d5",
+                            "on-primary-fixed-variant": "#00419e",
+                            "on-error-container": "#93000a",
+                            "tertiary-fixed": "#ffdbcf",
+                            "on-secondary-container": "#006e6e",
+                            "inverse-on-surface": "#f0f1f2",
+                            "on-surface": "#191c1d",
+                            "surface-tint": "#0047ab",
+                            "on-primary-container": "#ffffff",
+                            "on-tertiary-fixed": "#380c00",
+                            "on-secondary": "#ffffff",
+                            "secondary-fixed": "#93f2f2",
+                            "surface-dim": "#d9dadb",
+                            "on-tertiary": "#ffffff",
+                            "on-secondary-fixed": "#002020",
+                            "on-surface-variant": "#434653",
+                            "on-tertiary-fixed-variant": "#822800",
+                            "surface-bright": "#f8f9fa",
+                            "on-primary": "#ffffff",
+                            "background": "#f8f9fa",
+                            "primary": "#0047ab",
+                            "on-tertiary-container": "#ffaa8c",
+                            "surface-variant": "#e1e3e4",
+                            "on-error": "#ffffff",
+                            "surface-container-lowest": "#ffffff",
+                            "secondary-container": "#90efef",
+                            "surface-container-highest": "#e1e3e4",
+                            "primary-fixed": "#dae2ff",
+                            "tertiary": "#661d00",
+                            "primary-fixed-dim": "#b1c5ff",
+                            "surface-container-high": "#e7e8e9",
+                            "surface-container": "#edeeef",
+                            "primary-container": "#0047ab",
+                            "inverse-primary": "#b1c5ff",
+                            "surface-container-low": "#f3f4f5",
+                            "error-container": "#ffdad6",
+                            "harvest-gold": "#E5B80B",
+                            "heritage-red": "#B22234",
+                            "caribbean-azure": "#0088CE",
+                            "island-sand": "#F1EBE0"
+                        },
+                        "borderRadius": {
+                            "DEFAULT": "0.125rem",
+                            "lg": "0.25rem",
+                            "xl": "0.5rem",
+                            "full": "0.75rem"
+                        },
+                        "spacing": {
+                            "md": "16px",
+                            "margin-desktop": "64px",
+                            "xs": "4px",
+                            "margin-mobile": "16px",
+                            "base": "4px",
+                            "sm": "8px",
+                            "lg": "24px",
+                            "xl": "32px",
+                            "gutter": "24px",
+                            "container-max": "1280px"
+                        },
+                        "fontFamily": {
+                            "title-lg": ["Public Sans"],
+                            "body-md": ["Public Sans"],
+                            "headline-lg-mobile": ["EB Garamond"],
+                            "body-lg": ["Public Sans"],
+                            "label-md": ["Public Sans"],
+                            "headline-lg": ["EB Garamond"],
+                            "headline-md": ["EB Garamond"],
+                            "display-lg": ["EB Garamond"],
+                            "label-lg": ["Public Sans"]
+                        },
+                        "fontSize": {
+                            "title-lg": ["22px", {"lineHeight": "28px", "fontWeight": "600"}],
+                            "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                            "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "500"}],
+                            "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                            "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "500"}],
+                            "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "500"}],
+                            "headline-md": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                            "display-lg": ["57px", {"lineHeight": "64px", "letterSpacing": "-0.25px", "fontWeight": "600"}],
+                            "label-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600"}]
+                        }
+                    },
+                },
+            }
+        } catch (_e) {}
+    }catch(_e){}</script></head><body class="bg-surface text-on-surface font-body-md overflow-x-hidden">
+<!-- 1. Header: TopNavBar -->
+<header class="w-full top-0 sticky z-50 bg-surface border-b border-outline-variant">
+<nav class="flex justify-between items-center max-w-container-max mx-auto px-margin-desktop py-md">
+<div class="flex items-center gap-4">
+<span class="font-headline-md text-headline-md text-primary font-bold tracking-tight">Restore America's Paradise</span>
+</div>
+<div class="hidden md:flex items-center gap-8 font-body-lg text-body-lg">
+<a class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer" href="#pillars">Pillars</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer" href="#academy">Academy</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer" href="#events">Events</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer" href="#about">About</a>
+</div>
+<div class="flex items-center gap-4">
+<button class="px-6 py-2 bg-primary text-white font-label-lg rounded-lg transition-all active:scale-95 cursor-pointer">Join Us</button>
+<button class="px-6 py-2 bg-harvest-gold text-primary font-label-lg rounded-lg transition-all active:scale-95 cursor-pointer">Donate</button>
+</div>
+</nav>
+</header>
+<main>
+<!-- 2. Hero Section -->
+<section class="relative min-h-[85vh] flex items-center overflow-hidden">
+<div class="absolute inset-0 z-0">
+<div class="w-full h-full bg-cover bg-center" data-alt="A cinematic, high-resolution landscape of the U.S. Virgin Islands coastline at sunrise." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBPHr3H7tzwvDhRItDQVB_VMWr_Q8a-IQZa0eXBZqiBnxyZSqSPhoIqvfUKA1k_FWcwzPct9SnAkFdKEv4uqPqprigEjJnW77_MgXbYuL_U_bs1mJ4wbYSZOAb70YPGsM90dOaY-B96tsC7XVr_VozkkOugqy2Am39rw2lDnCv2S_N8xcukScULXzR6RMBq1TiNvIi15_gaZGHp39vDW2bXCz4zafKTc_GTi-oi6tFf0nfrtqAoxZfd9Bo5ZkIz4Qm82nno9kFz8Q')"></div>
+<div class="absolute inset-0 hero-gradient"></div>
+</div>
+<div class="relative z-10 max-w-container-max mx-auto px-margin-desktop grid md:grid-cols-2 gap-12 items-center">
+<div class="flex flex-col gap-6 animate-fade-in">
+<span class="inline-block px-4 py-1 bg-harvest-gold text-primary font-label-lg rounded-full w-max">U.S. VIRGIN ISLANDS CIVIC MOVEMENT</span>
+<h1 class="font-display-lg text-display-lg text-white">Restoring the Promise. <br><span class="text-harvest-gold italic">Reclaiming the Paradise.</span></h1>
+<p class="font-body-lg text-body-lg text-white/90 max-w-xl">
+                        A movement dedicated to the restoration, revitalization, and preservation of the cultural, economic, and environmental vitality of our islands through responsible governance and civic pride.
+                    </p>
+<div class="flex flex-wrap gap-4 pt-4">
+<button class="px-8 py-4 bg-white text-primary font-label-lg rounded-lg shadow-xl hover:bg-island-sand transition-all active:scale-95">Join the Movement</button>
+<button class="px-8 py-4 border-2 border-white text-white font-label-lg rounded-lg hover:bg-white/10 transition-all">Watch Our Story</button>
+</div>
+</div>
+<div class="flex justify-center md:justify-end">
+<div class="w-80 h-80 md:w-[450px] md:h-[450px] flex items-center justify-center animate-pulse-slow">
+  <img alt="Restore America's Paradise Seal" class="w-full h-auto drop-shadow-xl" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCXkXw7zlL6Ea03MPJjTUuWQVWTqJxlpSbmezBWiE9D75_zqWl1xjYVX4mnEvyQzFVQm480T8TfH9FWNMGEZxPltDlD5dP_PfokwjtFwZClTbnGmRgWctjJ35uvi7AU4iCXG1G4fIZnfYOiN4Dx13DbnKv2bcxDlB_P0Qd1EV1kFQUsdn3V-Y7dsMKqtp3hBeMwfLym_o1CBUcws6G6PTYJZY8zQgARUIebHT5W0NWLlqw0sUuG1zbL_kps537Ru29EoOIWzVQ1og">
+</div>
+</div>
+</div>
+</section>
+<!-- 3. Mission Overview -->
+<section class="py-24 bg-surface-container-lowest relative overflow-hidden" id="about">
+<div class="max-w-container-max mx-auto px-margin-desktop">
+<div class="grid lg:grid-cols-12 gap-12 items-center">
+<div class="lg:col-span-7">
+<h2 class="font-headline-lg text-headline-lg text-primary mb-8">Our Mission &amp; Core Mandate</h2>
+<div class="space-y-6 text-on-surface-variant">
+<p class="font-body-lg text-body-lg leading-relaxed">
+                                To promote the restoration, revitalization, and preservation of the cultural, economic, and environmental vitality of the U.S. Virgin Islands through civic engagement, public education, and advocacy for responsible governance, resilient infrastructure, and territorial empowerment.
+                            </p>
+<p class="font-body-md text-body-md">
+                                Founded to address a critical crossroads for our territory, RAP stands against political neglect and economic stagnation. We are a movement to rebuild the heart, soul, and strength of the Virgin Islands community.
+                            </p>
+</div>
+<div class="grid md:grid-cols-2 gap-6 mt-12">
+<div class="p-6 bg-island-sand rounded-xl border border-outline-variant">
+<span class="material-symbols-outlined text-primary text-3xl mb-4">account_balance</span>
+<h4 class="font-label-lg text-primary mb-2">RESPONSIBLE GOVERNANCE</h4>
+<p class="text-sm">Advocating for accountability and transparency at all levels of territorial leadership.</p>
+</div>
+<div class="p-6 bg-island-sand rounded-xl border border-outline-variant">
+<span class="material-symbols-outlined text-primary text-3xl mb-4">groups</span>
+<h4 class="font-label-lg text-primary mb-2">COMMUNITY PRIDE</h4>
+<p class="text-sm">Fostering unity and local ownership to ensure a resilient future for the next generation.</p>
+</div>
+</div>
+</div>
+<div class="lg:col-span-5">
+<div class="relative h-[500px] rounded-2xl overflow-hidden border-8 border-white shadow-2xl">
+<div class="w-full h-full bg-cover bg-center" data-alt="A portrait of professional leadership and civic engagement." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBIs0QmM9GQB2jLrYiZD70HPYoYNhaVATY_AYj_P8WTFnFW9w3vI3x3II7zGaW9P4rqAl3djQYV_HZdIyjY-r9JX2nBq_xLLyuyJ2eXoBXFqnsgbdSoc2BoUPT1G6I4Upoz1L8Dgv11C26fJmRw1qSXN8swd9ToWXHWwJQmWtnPLEh_QdiumZJfXFWMSDwwdgPg70dFjFxr2kmazvY0D-ytHDSg-uEDu19_ZTZLMnF2OVP22KocPsbhzpWr7auXs432StkwMD3_2w')"></div>
+<div class="absolute bottom-0 left-0 right-0 p-8 glass-panel border-t border-outline-variant">
+<blockquote class="italic font-headline-md text-primary">
+                                    "We are at a crossroads. It is time to reclaim the promise of our paradise."
+                                </blockquote>
+<cite class="block mt-4 font-label-lg text-on-surface-variant">— Earl L. Philip, Chairman</cite>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- 4 Pillars -->
+<section class="py-24 bg-surface" id="pillars">
+<div class="max-w-container-max mx-auto px-margin-desktop">
+<div class="text-center mb-16">
+<h2 class="font-headline-lg text-headline-lg text-primary">The Five Strategic Pillars</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto mt-4">Our core framework for moving the U.S. Virgin Islands toward self-reliance and revitalization.</p>
+</div>
+<div class="grid md:grid-cols-3 lg:grid-cols-5 gap-6">
+<!-- Political Empowerment -->
+<div class="pillar-card group bg-white border-t-4 border-primary p-8 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300">
+<span class="material-symbols-outlined pillar-icon text-primary text-4xl mb-6 transition-transform">gavel</span>
+<h3 class="font-headline-md text-xl text-primary mb-4">Political Empowerment</h3>
+<p class="text-sm text-on-surface-variant">Advocating for greater territorial representation and fair access to federal resources within the U.S. system.</p>
+</div>
+<!-- Economic Revival -->
+<div class="pillar-card group bg-white border-t-4 border-harvest-gold p-8 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300">
+<span class="material-symbols-outlined pillar-icon text-harvest-gold text-4xl mb-6 transition-transform">trending_up</span>
+<h3 class="font-headline-md text-xl text-primary mb-4">Economic Revival</h3>
+<p class="text-sm text-on-surface-variant">Promoting entrepreneurship, workforce development, and public-private partnerships in key industries.</p>
+</div>
+<!-- Cultural Restoration -->
+<div class="pillar-card group bg-white border-t-4 border-caribbean-azure p-8 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300">
+<span class="material-symbols-outlined pillar-icon text-caribbean-azure text-4xl mb-6 transition-transform">history_edu</span>
+<h3 class="font-headline-md text-xl text-primary mb-4">Cultural Restoration</h3>
+<p class="text-sm text-on-surface-variant">Protecting our heritage, language, and traditions for future generations to anchor their identity.</p>
+</div>
+<!-- Environmental Stewardship -->
+<div class="pillar-card group bg-white border-t-4 border-secondary p-8 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300">
+<span class="material-symbols-outlined pillar-icon text-secondary text-4xl mb-6 transition-transform">eco</span>
+<h3 class="font-headline-md text-xl text-primary mb-4">Environmental Stewardship</h3>
+<p class="text-sm text-on-surface-variant">Safeguarding natural beauty and promoting coastal preservation alongside sustainable development.</p>
+</div>
+<!-- Civic Engagement -->
+<div class="pillar-card group bg-white border-t-4 border-heritage-red p-8 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300">
+<span class="material-symbols-outlined pillar-icon text-heritage-red text-4xl mb-6 transition-transform">campaign</span>
+<h3 class="font-headline-md text-xl text-primary mb-4">Civic Engagement</h3>
+<p class="text-sm text-on-surface-variant">Mobilizing citizens through education and service to foster unity and permanent local ownership.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- 5. America’s Paradise Leadership Academy -->
+<section class="py-24 bg-primary text-white overflow-hidden" id="academy">
+<div class="max-w-container-max mx-auto px-margin-desktop">
+<div class="grid lg:grid-cols-2 gap-16 items-center">
+<div class="relative order-2 lg:order-1">
+
+<div class="relative z-10 grid grid-cols-2 gap-4">
+<div class="space-y-4 pt-12">
+<div class="bg-white/10 p-6 rounded-xl border border-white/20 hover:bg-white/20 transition-colors">
+<span class="material-symbols-outlined text-harvest-gold text-3xl mb-4">security</span>
+<h5 class="font-label-lg uppercase">Cybersecurity</h5>
+</div>
+<div class="bg-white/10 p-6 rounded-xl border border-white/20 hover:bg-white/20 transition-colors">
+<span class="material-symbols-outlined text-harvest-gold text-3xl mb-4">flight</span>
+<h5 class="font-label-lg uppercase">Aviation</h5>
+</div>
+</div>
+<div class="space-y-4">
+<div class="bg-white/10 p-6 rounded-xl border border-white/20 hover:bg-white/20 transition-colors">
+<span class="material-symbols-outlined text-harvest-gold text-3xl mb-4">local_police</span>
+<h5 class="font-label-lg uppercase">Public Safety</h5>
+</div>
+<div class="bg-white/10 p-6 rounded-xl border border-white/20 hover:bg-white/20 transition-colors">
+<span class="material-symbols-outlined text-harvest-gold text-3xl mb-4">anchor</span>
+<h5 class="font-label-lg uppercase">Maritime Trades</h5>
+</div>
+</div>
+</div>
+</div>
+<div class="order-1 lg:order-2 flex flex-col gap-8">
+<div>
+<span class="text-harvest-gold font-label-lg tracking-widest uppercase">Flagship Initiative</span>
+<h2 class="font-headline-lg text-headline-lg mt-2 mb-6">America’s Paradise Leadership Academy</h2>
+<p class="font-body-lg text-white/80">The territory’s first public, military-style high school for grades 9-12. Designed to empower youth through academic excellence and structured discipline.</p>
+</div>
+<div class="py-6 border-y border-white/10">
+<p class="text-harvest-gold font-headline-md italic mb-2">God · Duty · Discipline · Achievement</p>
+<p class="text-sm opacity-75 uppercase tracking-widest">Our Founding Motto</p>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex flex-col">
+<span class="text-3xl font-bold text-harvest-gold">2027-28</span>
+<span class="text-xs uppercase opacity-70">Target Launch</span>
+</div>
+<div class="w-px h-12 bg-white/20"></div>
+<div class="flex flex-col">
+<span class="text-3xl font-bold text-harvest-gold">50-60</span>
+<span class="text-xs uppercase opacity-70">Initial Cadets</span>
+</div>
+</div>
+<button class="w-max px-10 py-4 bg-harvest-gold text-primary font-label-lg rounded-lg hover:brightness-110 transition-all shadow-lg">Inquire About Enrollment</button>
+</div>
+</div>
+</div>
+</section>
+<!-- 6. Community Event -->
+<section class="py-24 bg-island-sand" id="events">
+<div class="max-w-container-max mx-auto px-margin-desktop">
+<div class="bg-white rounded-3xl overflow-hidden shadow-2xl flex flex-col lg:flex-row">
+<div class="lg:w-1/2 relative h-96 lg:h-auto">
+<div class="w-full h-full bg-cover bg-center" data-alt="Point Udall, St. Croix." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBmhdk8d4f014VvYaEfRccoXCZLaLH7pXUTnkJCQiaqpx9vXhpFWrZNauEcrINyUPhl9G04LKDxgsfFUhLyHWYjJYAbTpbW6Xr-z7lY7Rmbeh3XIeO_gUtdOyB00PYyEooGeaRuG9Od_2sRIWMjKXKBUduX9KRG2M7sonF3Dc_2wkd4CtaySF0bYvBOQi-XZ9x_tatonwceCjh58FLhvrJFPE0RBtaj6nVgMSddPBMmZoy1maJ4a4CAylmC_MdqOeriy2LKrib0zQ')"></div>
+<div class="absolute top-8 left-8 bg-harvest-gold text-primary p-4 rounded-xl shadow-lg text-center min-w-[100px]">
+<span class="block text-2xl font-bold">JULY 22</span>
+<span class="text-sm font-bold">2026</span>
+</div>
+</div>
+<div class="lg:w-1/2 p-12 lg:p-20 flex flex-col justify-center">
+<h2 class="font-headline-lg text-headline-lg text-primary mb-4">Pray Over the U.S. Virgin Islands</h2>
+<div class="flex items-center gap-3 text-caribbean-azure mb-8">
+<span class="material-symbols-outlined">location_on</span>
+<span class="font-label-lg">Point Udall, St. Croix | 8:00 AM</span>
+</div>
+<p class="font-body-lg text-on-surface-variant mb-8 leading-relaxed">
+                            Join a non-denominational, non-political community-wide prayer gathering focused on healing, restoration, and renewal. Together we pray for our families, youth, leadership, and economic future.
+                        </p>
+<div class="flex items-center gap-4 p-6 bg-surface rounded-xl border border-outline-variant mb-8">
+<div class="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-white">
+<span class="material-symbols-outlined">person</span>
+</div>
+<div>
+<p class="text-xs uppercase text-on-surface-variant tracking-wider">Featured Guest Speaker</p>
+<p class="font-bold text-primary text-lg">Marc Little</p>
+<p class="text-sm opacity-75 italic">Nationally recognized pastor and speaker</p>
+</div>
+</div>
+<button class="px-10 py-4 border-2 border-primary text-primary font-label-lg rounded-lg hover:bg-primary hover:text-white transition-all">Add to Calendar</button>
+</div>
+</div>
+</div>
+</section>
+<!-- 7. Call to Action & Contact -->
+<section class="py-24 bg-surface-container-low" id="contact">
+<div class="max-w-container-max mx-auto px-margin-desktop">
+<div class="grid lg:grid-cols-2 gap-16">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-primary mb-6">Partner With Us</h2>
+<p class="font-body-lg text-on-surface-variant mb-8">We are calling on local residents, businesses, and the broader Virgin Islands diaspora to back our upcoming initiatives and the construction of the Leadership Academy.</p>
+<div class="space-y-6">
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-harvest-gold">call</span>
+<div class="">
+<p class="font-label-lg text-primary">Primary Phone</p>
+<p class="text-lg">(904) 907-6011</p>
+</div>
+</div>
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-harvest-gold">mail</span>
+<div>
+<p class="font-label-lg text-primary">Official Email</p>
+<p class="text-lg">earl@nigc-llc.com</p>
+<p class="text-lg">Elphillip@hotmail.com</p>
+</div>
+</div>
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-harvest-gold">location_on</span>
+<div>
+<p class="font-label-lg text-primary">Base Location</p>
+<p class="text-lg">St. Croix, U.S. Virgin Islands</p>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-white p-10 rounded-2xl shadow-xl border border-outline-variant">
+<h3 class="font-headline-md text-primary mb-8">Stakeholder Inquiry</h3>
+<form class="space-y-6" onsubmit="event.preventDefault()">
+<div class="grid md:grid-cols-2 gap-6">
+<div>
+<label class="font-label-lg block mb-2 text-on-surface-variant">FULL NAME</label>
+<input class="w-full px-4 py-3 bg-surface border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" type="text">
+</div>
+<div class="">
+<label class="font-label-lg block mb-2 text-on-surface-variant">EMAIL ADDRESS</label>
+<input class="w-full px-4 py-3 bg-surface border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" type="email">
+</div>
+</div>
+<div class="">
+<label class="font-label-lg block mb-2 text-on-surface-variant">INTEREST AREA</label>
+<select class="w-full px-4 py-3 bg-surface border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all">
+<option>Academy Enrollment</option>
+<option>Corporate Sponsorship</option>
+<option>Volunteer Opportunities</option>
+<option>Donation Inquiry</option>
+</select>
+</div>
+<div class="">
+<label class="font-label-lg block mb-2 text-on-surface-variant">MESSAGE</label>
+<textarea class="w-full px-4 py-3 bg-surface border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" rows="4"></textarea>
+</div>
+<button class="w-full py-4 bg-primary text-white font-label-lg rounded-lg hover:opacity-90 transition-opacity">Submit Inquiry</button>
+</form>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- 8. Footer -->
+<footer class="w-full bg-primary text-white">
+<div class="flex flex-col items-center gap-md py-xl px-margin-desktop w-full max-w-container-max mx-auto">
+<div class="font-headline-lg text-headline-lg text-white mb-4">Restore America's Paradise</div>
+<div class="flex flex-wrap justify-center gap-8 text-white/80 font-body-md text-body-md mb-8">
+<a class="hover:text-white hover:underline decoration-harvest-gold decoration-2 transition-opacity" href="#">Mission</a>
+<a class="hover:text-white hover:underline decoration-harvest-gold decoration-2 transition-opacity" href="#">Leadership Academy</a>
+<a class="hover:text-white hover:underline decoration-harvest-gold decoration-2 transition-opacity" href="#">Point Udall Event</a>
+</div></div></footer></body></html>
