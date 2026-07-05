@@ -61,12 +61,14 @@
   --color-caribbean-azure: #0088ce;
   --color-island-sand: #f1ebe0;
 
-  /* spacing scale (structural: used as px-margin-desktop, max-w-container-max, etc.) */
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
-  --spacing-md: 16px;
-  --spacing-lg: 24px;
-  --spacing-xl: 32px;
+  /* spacing scale (structural: used as px-margin-desktop, max-w-container-max, etc.)
+     Deliberately NOT defining --spacing-xs/sm/md/lg/xl here: in Tailwind v4 the
+     spacing namespace is shared across max-width, width, gap and other sizing
+     utilities, so custom keys named "xs/sm/md/lg/xl" silently shadow Tailwind's
+     own max-w-{xs,sm,md,lg,xl} scale (this broke max-w-xl and max-w-lg down to
+     32px and 24px in production). The design-system pixel values (4/8/16/24/32)
+     are identical to Tailwind's default p-1, p-2, p-4, p-6, p-8, so no custom
+     tokens are needed for those at all. */
   --spacing-gutter: 24px;
   --spacing-margin-mobile: 16px;
   --spacing-margin-desktop: 64px;
