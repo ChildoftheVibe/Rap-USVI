@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createServerSupabaseClient, createServiceRoleClient } from "@/lib/supabase/server";
-import { eventSchema, type EventInput } from "@/lib/validation/event";
+import { eventSchema, eventStatusValues, type EventInput, type EventStatus } from "@/lib/validation/event";
 import { astLocalInputToIso, type FlyerRatio } from "@/lib/events";
 import { resolvePendingWaitlistPromotions } from "@/lib/eventEmail";
 import type { RsvpStatus } from "@/lib/events";
@@ -114,6 +114,23 @@ export async function updateEvent(id: string, input: EventInput) {
   revalidatePath("/events");
   if (existing?.slug) revalidatePath(`/events/${existing.slug}`);
   revalidatePath(`/events/${data.slug}`);
+}
+
+export async function updateEventStatus(id: string, status: EventStatus) {
+  await requireUser();
+  if (!eventStatusValues.includes(status)) throw new Error("Invalid status");
+
+  const serviceRole = createServiceRoleClient();
+  const { data: existing } = await serviceRole.from("events").select("slug").eq("id", id).maybeSingle();
+
+  const { error } = await serviceRole.from("events").update({ status }).eq("id", id);
+  if (error) throw new Error("Failed to update status");
+
+  revalidatePath("/admin/events");
+  revalidatePath(`/admin/events/${id}`);
+  revalidatePath("/events");
+  revalidatePath("/");
+  if (existing?.slug) revalidatePath(`/events/${existing.slug}`);
 }
 
 export async function deleteEvent(id: string) {

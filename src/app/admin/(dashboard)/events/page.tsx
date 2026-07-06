@@ -4,6 +4,7 @@ import { createServiceRoleClient } from "@/lib/supabase/server";
 import { eventStatusValues } from "@/lib/validation/event";
 import { formatEventDate, getEventRsvpSummary } from "@/lib/events";
 import type { EventRow } from "@/lib/events";
+import { EventStatusToggle } from "@/components/admin/EventStatusToggle";
 
 export const metadata: Metadata = {
   title: "Events | Admin",
@@ -14,12 +15,6 @@ export const dynamic = "force-dynamic";
 
 const FOCUS_RING =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2";
-
-const STATUS_STYLES: Record<string, string> = {
-  draft: "border-outline text-on-surface-variant",
-  published: "border-secondary text-secondary",
-  cancelled: "border-error text-error",
-};
 
 function isEventStatus(value: string | undefined): value is (typeof eventStatusValues)[number] {
   return !!value && (eventStatusValues as readonly string[]).includes(value);
@@ -128,11 +123,7 @@ export default async function AdminEventsPage({
                       {formatEventDate(event.start_at)}
                     </td>
                     <td className="px-4 py-3">
-                      <span
-                        className={`rounded-sm border px-2 py-1 text-xs font-medium capitalize ${STATUS_STYLES[event.status]}`}
-                      >
-                        {event.status}
-                      </span>
+                      <EventStatusToggle id={event.id} status={event.status} />
                     </td>
                     <td className="px-4 py-3 text-on-surface-variant">
                       {summary.confirmedHeadcount}
