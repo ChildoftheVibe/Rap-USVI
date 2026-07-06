@@ -31,6 +31,13 @@ const nextConfig: NextConfig = {
     // public object URL, e.g. https://<project-ref>.supabase.co/storage/v1/object/public/...
     remotePatterns: [{ protocol: "https", hostname: "*.supabase.co", pathname: "/storage/v1/object/public/**" }],
   },
+  experimental: {
+    // Server Actions default to a 1MB request body limit, well under the
+    // 25MB the event-media upload action allows — raise it to match.
+    serverActions: {
+      bodySizeLimit: "25mb",
+    },
+  },
   async headers() {
     return [
       {
