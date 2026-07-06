@@ -6,29 +6,16 @@ import { openJoinModal } from "@/components/cta/JoinMovementModal";
 import { DonateButton } from "@/components/cta/DonateButton";
 import { site } from "@/lib/content";
 
-/** Same-page section anchors need a plain `<a>`; the events listing is a real route and benefits from client-side nav. */
-function NavLink({ href, className, onClick, children }: { href: string; className: string; onClick?: () => void; children: React.ReactNode }) {
-  if (href.startsWith("#")) {
-    return (
-      <a href={href} className={className} onClick={onClick}>
-        {children}
-      </a>
-    );
-  }
-  return (
-    <Link href={href} className={className} onClick={onClick}>
-      {children}
-    </Link>
-  );
-}
-
+// Section anchors are rooted ("/#pillars", not "#pillars") so they work from
+// any page — Link navigates to "/" first, then scrolls to the section, the
+// same fix already applied to the Footer's nav links.
 const NAV_LINKS = [
-  { href: "#pillars", label: "Pillars" },
-  { href: "#academy", label: "Academy" },
-  { href: "#events", label: "Events" },
+  { href: "/#pillars", label: "Pillars" },
+  { href: "/#academy", label: "Academy" },
+  { href: "/#events", label: "Events" },
   { href: "/events", label: "All Events" },
-  { href: "#about", label: "About" },
-  { href: "#contact", label: "Contact" },
+  { href: "/#about", label: "About" },
+  { href: "/#contact", label: "Contact" },
 ];
 
 export function Header() {
@@ -55,23 +42,23 @@ export function Header() {
         aria-label="Primary"
         className="mx-auto flex max-w-container-max items-center justify-between gap-4 px-margin-mobile py-3 md:px-margin-desktop"
       >
-        <a
-          href="#"
+        <Link
+          href="/"
           className="rounded-md font-[family-name:var(--font-headline)] text-lg font-bold tracking-tight text-primary md:text-2xl"
         >
           {site.name}
-        </a>
+        </Link>
 
         {/* Desktop navigation */}
         <div className="hidden items-center gap-6 lg:flex xl:gap-8">
           {NAV_LINKS.map((link) => (
-            <NavLink
+            <Link
               key={link.href}
               href={link.href}
               className="rounded-md px-1 py-1 text-on-surface-variant transition-colors hover:text-primary"
             >
               {link.label}
-            </NavLink>
+            </Link>
           ))}
         </div>
 
@@ -107,13 +94,13 @@ export function Header() {
           <ul className="flex flex-col">
             {NAV_LINKS.map((link) => (
               <li key={link.href}>
-                <NavLink
+                <Link
                   href={link.href}
                   onClick={() => setMenuOpen(false)}
                   className="block rounded-md py-3 text-base text-on-surface-variant transition-colors hover:text-primary"
                 >
                   {link.label}
-                </NavLink>
+                </Link>
               </li>
             ))}
           </ul>
