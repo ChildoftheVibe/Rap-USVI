@@ -3,6 +3,7 @@ import { Footer } from "@/components/layout/Footer";
 import { JoinMovementModal } from "@/components/cta/JoinMovementModal";
 import { EventPopup, type PopupEventData } from "@/components/events/EventPopup";
 import { createServiceRoleClient } from "@/lib/supabase/server";
+import { resolvePopupImageUrl } from "@/lib/events";
 
 export const revalidate = 60;
 
@@ -19,7 +20,9 @@ async function getActivePopupEvent(): Promise<PopupEventData | null> {
 
     const { data } = await supabase
       .from("events")
-      .select("slug, title, popup_headline, popup_body, popup_cta_label, flyer_url")
+      .select(
+        "slug, title, popup_headline, popup_body, popup_cta_label, popup_image_source, banner_url, flyer_3x5_url, flyer_4x5_url, flyer_9x16_url"
+      )
       .eq("status", "published")
       .eq("popup_enabled", true)
       .gte("end_at", nowIso)
@@ -29,7 +32,15 @@ async function getActivePopupEvent(): Promise<PopupEventData | null> {
       .limit(1)
       .maybeSingle();
 
-    return data as PopupEventData | null;
+    if (!data) return null;
+    return {
+      slug: data.slug,
+      title: data.title,
+      popup_headline: data.popup_headline,
+      popup_body: data.popup_body,
+      popup_cta_label: data.popup_cta_label,
+      image_url: resolvePopupImageUrl(data),
+    };
   } catch (err) {
     console.error("Failed to load active pop-up event", err);
     return null;

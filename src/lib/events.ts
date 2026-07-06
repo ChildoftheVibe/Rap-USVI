@@ -1,9 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { EventStatus } from "@/lib/validation/event";
+import type { EventStatus, PopupImageSource } from "@/lib/validation/event";
 
 /** All events are U.S. Virgin Islands based and never observe DST. */
 export const EVENT_TIMEZONE = "America/St_Thomas";
 const AST_FIXED_OFFSET = "-04:00";
+
+export const flyerRatioValues = ["3x5", "4x5", "9x16"] as const;
+export type FlyerRatio = (typeof flyerRatioValues)[number];
 
 export interface EventRow {
   id: string;
@@ -22,15 +25,50 @@ export interface EventRow {
   capacity: number | null;
   waitlist_enabled: boolean;
   rsvp_enabled: boolean;
-  flyer_url: string | null;
-  flyer_path: string | null;
-  flyer_alt: string | null;
+  banner_url: string | null;
+  banner_path: string | null;
+  banner_alt: string | null;
+  flyer_3x5_url: string | null;
+  flyer_3x5_path: string | null;
+  flyer_4x5_url: string | null;
+  flyer_4x5_path: string | null;
+  flyer_9x16_url: string | null;
+  flyer_9x16_path: string | null;
   popup_enabled: boolean;
   popup_headline: string | null;
   popup_body: string | null;
   popup_cta_label: string;
   popup_starts_at: string | null;
   popup_ends_at: string | null;
+  popup_image_source: PopupImageSource;
+}
+
+export interface EventMediaRow {
+  id: string;
+  event_id: string;
+  media_type: "image" | "video";
+  url: string;
+  path: string;
+  alt: string | null;
+  created_at: string;
+}
+
+/** Resolves which image (if any) a published event's site-wide pop-up should show, per its `popup_image_source` choice. */
+export function resolvePopupImageUrl(
+  event: Pick<EventRow, "popup_image_source" | "banner_url" | "flyer_3x5_url" | "flyer_4x5_url" | "flyer_9x16_url">
+): string | null {
+  switch (event.popup_image_source) {
+    case "banner":
+      return event.banner_url;
+    case "flyer_3x5":
+      return event.flyer_3x5_url;
+    case "flyer_4x5":
+      return event.flyer_4x5_url;
+    case "flyer_9x16":
+      return event.flyer_9x16_url;
+    default:
+      return null;
+  }
 }
 
 export type RsvpStatus = "confirmed" | "waitlisted" | "cancelled";
@@ -102,6 +140,20 @@ export function formatEventDate(iso: string): string {
 
 export function formatEventTime(iso: string): string {
   return AST_TIME_FORMAT.format(new Date(iso));
+}
+
+const AST_BADGE_MONTH_FORMAT = new Intl.DateTimeFormat("en-US", { timeZone: EVENT_TIMEZONE, month: "short" });
+const AST_BADGE_DAY_FORMAT = new Intl.DateTimeFormat("en-US", { timeZone: EVENT_TIMEZONE, day: "numeric" });
+const AST_BADGE_YEAR_FORMAT = new Intl.DateTimeFormat("en-US", { timeZone: EVENT_TIMEZONE, year: "numeric" });
+
+/** Short month/day/year for the date-badge chip shown on event cards (e.g. "JUL" / "22" / "2026"). */
+export function formatEventDateBadge(iso: string): { month: string; day: string; year: string } {
+  const date = new Date(iso);
+  return {
+    month: AST_BADGE_MONTH_FORMAT.format(date).toUpperCase(),
+    day: AST_BADGE_DAY_FORMAT.format(date),
+    year: AST_BADGE_YEAR_FORMAT.format(date),
+  };
 }
 
 /** Human-readable "Friday, July 22, 2026 · 8:00 AM – 10:00 AM AST" (or spanning dates if multi-day). */

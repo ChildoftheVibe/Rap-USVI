@@ -3,7 +3,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { computeAvailability, formatEventDateRange, getEventRsvpSummary } from "@/lib/events";
-import type { EventRow } from "@/lib/events";
+import type { EventRow, EventMediaRow } from "@/lib/events";
 import { EventRsvpForm } from "@/components/forms/EventRsvpForm";
 import { site } from "@/lib/content";
 
@@ -20,6 +20,16 @@ async function getPublishedEvent(slug: string): Promise<EventRow | null> {
     .eq("status", "published")
     .maybeSingle();
   return data as EventRow | null;
+}
+
+async function getEventMedia(eventId: string): Promise<EventMediaRow[]> {
+  const supabase = createServiceRoleClient();
+  const { data } = await supabase
+    .from("event_media")
+    .select("id, event_id, media_type, url, path, alt, created_at")
+    .eq("event_id", eventId)
+    .order("created_at", { ascending: true });
+  return (data ?? []) as EventMediaRow[];
 }
 
 export async function generateMetadata({
@@ -46,14 +56,15 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const availability = computeAvailability(event.capacity, summary.confirmedHeadcount);
   const isPast = new Date(event.end_at) < new Date();
   const rsvpOpen = event.rsvp_enabled && !isPast;
+  const media = await getEventMedia(event.id);
 
   return (
     <article>
       <div className="relative h-72 w-full overflow-hidden bg-primary md:h-96">
-        {event.flyer_url ? (
+        {event.banner_url ? (
           <Image
-            src={event.flyer_url}
-            alt={event.flyer_alt || event.title}
+            src={event.banner_url}
+            alt={event.banner_alt || event.title}
             fill
             sizes="100vw"
             className="object-cover"
@@ -94,12 +105,26 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           {event.description && (
             <p className="whitespace-pre-line leading-relaxed text-on-surface-variant">{event.description}</p>
           )}
+          {media.length > 0 && (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {media.map((item) =>
+                item.media_type === "image" ? (
+                  <div key={item.id} className="relative aspect-video overflow-hidden rounded-lg">
+                    <Image src={item.url} alt={item.alt || ""} fill sizes="(min-width: 640px) 50vw, 100vw" className="object-cover" />
+                  </div>
+                ) : (
+                  // eslint-disable-next-line jsx-a11y/media-has-caption
+                  <video key={item.id} src={item.url} controls className="aspect-video w-full rounded-lg" />
+                )
+              )}
+            </div>
+          )}
           <a href={`/api/events/${event.slug}/ics`} className="btn btn-md btn-outline w-full sm:w-max">
             Add to Calendar
           </a>
         </div>
 
-        <div>
+        <div id="rsvp">
           {isPast ? (
             <div className="rounded-lg border border-outline-variant bg-surface-container-lowest p-8 text-center">
               <p className="text-on-surface-variant">This event has already taken place.</p>

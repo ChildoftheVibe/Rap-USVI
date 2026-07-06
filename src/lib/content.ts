@@ -119,23 +119,6 @@ export const academy = {
   ],
 };
 
-export const event = {
-  name: "Pray Over the U.S. Virgin Islands",
-  dateLabel: "JULY 22",
-  yearLabel: "2026",
-  // 2026-07-22 08:00 America/St_Thomas (AST, UTC-4, no DST observed)
-  startIso: "2026-07-22T08:00:00-04:00",
-  endIso: "2026-07-22T10:00:00-04:00",
-  location: "Point Udall, St. Croix",
-  time: "8:00 AM",
-  description:
-    "Join a non-denominational, non-political community-wide prayer gathering focused on healing, restoration, and renewal. Together we pray for our families, youth, leadership, and economic future.",
-  speaker: {
-    name: "Marc Little",
-    title: "Nationally recognized pastor and speaker",
-  },
-};
-
 export const interestAreas = [
   { value: "academy_enrollment", label: "Academy Enrollment" },
   { value: "corporate_sponsorship", label: "Corporate Sponsorship" },

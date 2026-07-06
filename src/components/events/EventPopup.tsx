@@ -10,7 +10,7 @@ export interface PopupEventData {
   popup_headline: string | null;
   popup_body: string | null;
   popup_cta_label: string;
-  flyer_url: string | null;
+  image_url: string | null;
 }
 
 const SHOW_DELAY_MS = 1200;
@@ -55,9 +55,9 @@ export function EventPopup({ event }: { event: PopupEventData | null }) {
         className="w-full max-w-md overflow-hidden rounded-lg bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {event.flyer_url && (
+        {event.image_url && (
           <div className="relative h-40 w-full">
-            <Image src={event.flyer_url} alt="" fill sizes="448px" className="object-cover" />
+            <Image src={event.image_url} alt="" fill sizes="448px" className="object-cover" />
           </div>
         )}
         <div className="p-8">

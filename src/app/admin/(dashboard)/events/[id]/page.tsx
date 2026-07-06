@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { isoToAstLocalInput } from "@/lib/events";
-import type { EventRow } from "@/lib/events";
+import type { EventRow, EventMediaRow } from "@/lib/events";
 import { EventForm, type EventFormInitial } from "@/components/admin/EventForm";
 
 export const metadata: Metadata = {
@@ -26,14 +26,18 @@ function toFormInitial(event: EventRow): EventFormInitial {
     capacity: event.capacity,
     waitlistEnabled: event.waitlist_enabled,
     rsvpEnabled: event.rsvp_enabled,
-    flyerAlt: event.flyer_alt ?? "",
-    flyerUrl: event.flyer_url,
+    bannerAlt: event.banner_alt ?? "",
+    bannerUrl: event.banner_url,
+    flyer3x5Url: event.flyer_3x5_url,
+    flyer4x5Url: event.flyer_4x5_url,
+    flyer9x16Url: event.flyer_9x16_url,
     popupEnabled: event.popup_enabled,
     popupHeadline: event.popup_headline ?? "",
     popupBody: event.popup_body ?? "",
     popupCtaLabel: event.popup_cta_label,
     popupStartsAt: event.popup_starts_at ? isoToAstLocalInput(event.popup_starts_at) : "",
     popupEndsAt: event.popup_ends_at ? isoToAstLocalInput(event.popup_ends_at) : "",
+    popupImageSource: event.popup_image_source,
   };
 }
 
@@ -43,6 +47,12 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
   const { data: event } = await supabase.from("events").select("*").eq("id", id).maybeSingle();
 
   if (!event) notFound();
+
+  const { data: media } = await supabase
+    .from("event_media")
+    .select("id, event_id, media_type, url, path, alt, created_at")
+    .eq("event_id", id)
+    .order("created_at", { ascending: true });
 
   return (
     <div className="space-y-6">
@@ -55,7 +65,12 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
           Manage RSVPs
         </Link>
       </div>
-      <EventForm mode="edit" eventId={id} initial={toFormInitial(event as EventRow)} />
+      <EventForm
+        mode="edit"
+        eventId={id}
+        initial={toFormInitial(event as EventRow)}
+        initialMedia={(media ?? []) as EventMediaRow[]}
+      />
     </div>
   );
 }

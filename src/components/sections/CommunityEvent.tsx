@@ -1,58 +1,40 @@
-import Image from "next/image";
-import Link from "next/link";
-import { AddToCalendarButton } from "@/components/cta/AddToCalendarButton";
-import { event } from "@/lib/content";
+import { createServiceRoleClient } from "@/lib/supabase/server";
+import { EventCarousel } from "@/components/events/EventCarousel";
+import type { EventRow } from "@/lib/events";
 
-export function CommunityEvent() {
+// Same filter as the all-events page: published events, ending in the future,
+// soonest first — so this section always mirrors what's live on /events.
+async function getUpcomingEvents(): Promise<EventRow[]> {
+  const supabase = createServiceRoleClient();
+  const nowIso = new Date().toISOString();
+
+  const { data } = await supabase
+    .from("events")
+    .select("*")
+    .eq("status", "published")
+    .gte("end_at", nowIso)
+    .order("start_at", { ascending: true })
+    .limit(8);
+
+  return (data ?? []) as EventRow[];
+}
+
+export async function CommunityEvent() {
+  const events = await getUpcomingEvents();
+  if (events.length === 0) return null;
+
   return (
     <section className="bg-island-sand py-24" id="events">
       <div className="mx-auto max-w-container-max px-margin-mobile md:px-margin-desktop">
-        <div className="flex flex-col overflow-hidden rounded-3xl bg-white shadow-2xl lg:flex-row">
-          <div className="relative h-96 lg:h-auto lg:w-1/2">
-            <Image
-              src="/images/point-udall.jpg"
-              alt="Point Udall, St. Croix"
-              fill
-              sizes="(min-width: 1024px) 50vw, 100vw"
-              className="object-cover"
-            />
-            <div className="absolute left-8 top-8 min-w-[100px] rounded-lg bg-harvest-gold p-4 text-center text-primary shadow-lg">
-              <span className="block text-2xl font-bold">{event.dateLabel}</span>
-              <span className="text-sm font-bold">{event.yearLabel}</span>
-            </div>
-          </div>
-          <div className="flex flex-col justify-center p-12 lg:w-1/2 lg:p-20">
-            <h2 className="mb-4 font-[family-name:var(--font-headline)] text-3xl text-primary md:text-4xl">
-              {event.name}
-            </h2>
-            <div className="mb-8 flex items-center gap-3 text-caribbean-azure">
-              <span className="material-symbols-outlined" aria-hidden="true">location_on</span>
-              <span className="font-medium">
-                {event.location} | {event.time}
-              </span>
-            </div>
-            <p className="mb-8 leading-relaxed text-on-surface-variant">{event.description}</p>
-            <div className="mb-8 flex items-center gap-4 rounded-lg border border-outline-variant bg-surface p-6">
-              <div className="flex h-16 w-16 items-center justify-center rounded-chip bg-primary text-white">
-                <span className="material-symbols-outlined" aria-hidden="true">person</span>
-              </div>
-              <div>
-                <p className="text-xs uppercase tracking-wider text-on-surface-variant">
-                  Featured Guest Speaker
-                </p>
-                <p className="text-lg font-bold text-primary">{event.speaker.name}</p>
-                <p className="text-sm italic opacity-75">{event.speaker.title}</p>
-              </div>
-            </div>
-            <AddToCalendarButton />
-            <Link
-              href="/events"
-              className="mt-4 inline-block rounded-sm text-sm font-medium text-caribbean-azure underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-            >
-              View all upcoming events →
-            </Link>
-          </div>
+        <div className="mb-12 max-w-2xl">
+          <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-caribbean-azure">
+            Community Calendar
+          </p>
+          <h2 className="font-[family-name:var(--font-headline)] text-3xl text-primary md:text-4xl">
+            Upcoming Events
+          </h2>
         </div>
+        <EventCarousel events={events} />
       </div>
     </section>
   );

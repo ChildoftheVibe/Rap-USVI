@@ -5,7 +5,11 @@ import { Academy } from "@/components/sections/Academy";
 import { CommunityEvent } from "@/components/sections/CommunityEvent";
 import { Contact } from "@/components/sections/Contact";
 
-export default function Home() {
+// The Community Calendar section reads live events, so this page must never
+// be statically cached — same reasoning as /events.
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
   return (
     <>
       <Hero />

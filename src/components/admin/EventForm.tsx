@@ -2,15 +2,45 @@
 
 import { useRef, useState, useTransition } from "react";
 import Image from "next/image";
-import { createEvent, updateEvent, deleteEvent, uploadEventFlyer, removeEventFlyer } from "@/app/admin/events/actions";
-import { slugify } from "@/lib/events";
-import type { EventStatus } from "@/lib/validation/event";
+import {
+  createEvent,
+  updateEvent,
+  deleteEvent,
+  uploadEventBanner,
+  removeEventBanner,
+  uploadEventFlyerRatio,
+  removeEventFlyerRatio,
+  addEventMedia,
+  removeEventMedia,
+} from "@/app/admin/events/actions";
+import { slugify, flyerRatioValues } from "@/lib/events";
+import type { FlyerRatio, EventMediaRow } from "@/lib/events";
+import type { EventStatus, PopupImageSource } from "@/lib/validation/event";
+import { popupImageSourceValues } from "@/lib/validation/event";
 
 const FOCUS_RING =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2";
 const FIELD_CLASS =
   "w-full rounded-sm border border-outline-variant bg-surface px-4 py-2.5 outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary";
 const LABEL_CLASS = "mb-2 block text-sm font-medium text-on-surface-variant";
+
+const FLYER_RATIO_LABELS: Record<FlyerRatio, string> = {
+  "3x5": "3:5",
+  "4x5": "4:5",
+  "9x16": "9:16",
+};
+const FLYER_RATIO_PREVIEW_CLASS: Record<FlyerRatio, string> = {
+  "3x5": "aspect-[3/5]",
+  "4x5": "aspect-[4/5]",
+  "9x16": "aspect-[9/16]",
+};
+const POPUP_IMAGE_LABELS: Record<PopupImageSource, string> = {
+  none: "No image",
+  banner: "Banner image",
+  flyer_3x5: "Flyer (3:5)",
+  flyer_4x5: "Flyer (4:5)",
+  flyer_9x16: "Flyer (9:16)",
+};
 
 export interface EventFormInitial {
   title: string;
@@ -24,14 +54,18 @@ export interface EventFormInitial {
   capacity: number | null;
   waitlistEnabled: boolean;
   rsvpEnabled: boolean;
-  flyerAlt: string;
-  flyerUrl: string | null;
+  bannerAlt: string;
+  bannerUrl: string | null;
+  flyer3x5Url: string | null;
+  flyer4x5Url: string | null;
+  flyer9x16Url: string | null;
   popupEnabled: boolean;
   popupHeadline: string;
   popupBody: string;
   popupCtaLabel: string;
   popupStartsAt: string;
   popupEndsAt: string;
+  popupImageSource: PopupImageSource;
 }
 
 const DEFAULTS: EventFormInitial = {
@@ -46,23 +80,28 @@ const DEFAULTS: EventFormInitial = {
   capacity: null,
   waitlistEnabled: true,
   rsvpEnabled: true,
-  flyerAlt: "",
-  flyerUrl: null,
+  bannerAlt: "",
+  bannerUrl: null,
+  flyer3x5Url: null,
+  flyer4x5Url: null,
+  flyer9x16Url: null,
   popupEnabled: false,
   popupHeadline: "",
   popupBody: "",
   popupCtaLabel: "RSVP Now",
   popupStartsAt: "",
   popupEndsAt: "",
+  popupImageSource: "banner",
 };
 
 interface EventFormProps {
   mode: "new" | "edit";
   eventId?: string;
   initial?: EventFormInitial;
+  initialMedia?: EventMediaRow[];
 }
 
-export function EventForm({ mode, eventId, initial }: EventFormProps) {
+export function EventForm({ mode, eventId, initial, initialMedia }: EventFormProps) {
   const values = initial ?? DEFAULTS;
 
   const [title, setTitle] = useState(values.title);
@@ -77,20 +116,21 @@ export function EventForm({ mode, eventId, initial }: EventFormProps) {
   const [capacity, setCapacity] = useState(values.capacity === null ? "" : String(values.capacity));
   const [waitlistEnabled, setWaitlistEnabled] = useState(values.waitlistEnabled);
   const [rsvpEnabled, setRsvpEnabled] = useState(values.rsvpEnabled);
-  const [flyerAlt, setFlyerAlt] = useState(values.flyerAlt);
-  const [flyerUrl, setFlyerUrl] = useState(values.flyerUrl);
+  const [bannerAlt, setBannerAlt] = useState(values.bannerAlt);
+  const [bannerUrl, setBannerUrl] = useState(values.bannerUrl);
   const [popupEnabled, setPopupEnabled] = useState(values.popupEnabled);
   const [popupHeadline, setPopupHeadline] = useState(values.popupHeadline);
   const [popupBody, setPopupBody] = useState(values.popupBody);
   const [popupCtaLabel, setPopupCtaLabel] = useState(values.popupCtaLabel);
   const [popupStartsAt, setPopupStartsAt] = useState(values.popupStartsAt);
   const [popupEndsAt, setPopupEndsAt] = useState(values.popupEndsAt);
+  const [popupImageSource, setPopupImageSource] = useState<PopupImageSource>(values.popupImageSource);
 
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
-  const [flyerError, setFlyerError] = useState("");
+  const [bannerError, setBannerError] = useState("");
   const [isPending, startTransition] = useTransition();
-  const [isFlyerPending, startFlyerTransition] = useTransition();
+  const [isBannerPending, startBannerTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function handleTitleChange(value: string) {
@@ -111,13 +151,14 @@ export function EventForm({ mode, eventId, initial }: EventFormProps) {
       capacity: capacity.trim() === "" ? null : Number(capacity),
       waitlistEnabled,
       rsvpEnabled,
-      flyerAlt,
+      bannerAlt,
       popupEnabled,
       popupHeadline,
       popupBody,
       popupCtaLabel,
       popupStartsAt,
       popupEndsAt,
+      popupImageSource,
     };
   }
 
@@ -151,32 +192,32 @@ export function EventForm({ mode, eventId, initial }: EventFormProps) {
     });
   }
 
-  function handleFlyerUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleBannerUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file || !eventId) return;
-    setFlyerError("");
+    setBannerError("");
     const formData = new FormData();
     formData.set("file", file);
-    startFlyerTransition(async () => {
+    startBannerTransition(async () => {
       try {
-        const result = await uploadEventFlyer(eventId, formData);
-        setFlyerUrl(result.url);
+        const result = await uploadEventBanner(eventId, formData);
+        setBannerUrl(result.url);
       } catch (err) {
-        setFlyerError(err instanceof Error ? err.message : "Failed to upload image");
+        setBannerError(err instanceof Error ? err.message : "Failed to upload image");
       }
     });
     e.target.value = "";
   }
 
-  function handleFlyerRemove() {
+  function handleBannerRemove() {
     if (!eventId) return;
-    setFlyerError("");
-    startFlyerTransition(async () => {
+    setBannerError("");
+    startBannerTransition(async () => {
       try {
-        await removeEventFlyer(eventId);
-        setFlyerUrl(null);
+        await removeEventBanner(eventId);
+        setBannerUrl(null);
       } catch (err) {
-        setFlyerError(err instanceof Error ? err.message : "Failed to remove image");
+        setBannerError(err instanceof Error ? err.message : "Failed to remove image");
       }
     });
   }
@@ -222,6 +263,14 @@ export function EventForm({ mode, eventId, initial }: EventFormProps) {
             className={FIELD_CLASS}
           />
         </div>
+        {mode === "edit" && eventId ? (
+          <div>
+            <p className={LABEL_CLASS}>DESCRIPTION MEDIA (images &amp; videos)</p>
+            <MediaGallery eventId={eventId} initialMedia={initialMedia ?? []} />
+          </div>
+        ) : (
+          <p className="text-sm text-on-surface-variant">Save the event first to add images or videos.</p>
+        )}
       </section>
 
       <section className="space-y-4">
@@ -330,20 +379,20 @@ export function EventForm({ mode, eventId, initial }: EventFormProps) {
 
       {mode === "edit" && eventId ? (
         <section className="space-y-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-on-surface-variant">Flyer</h2>
-          {flyerUrl && (
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-on-surface-variant">Banner Image</h2>
+          {bannerUrl && (
             <div className="relative h-48 w-full max-w-sm overflow-hidden rounded-lg border border-outline-variant">
-              <Image src={flyerUrl} alt={flyerAlt || title} fill sizes="384px" className="object-cover" />
+              <Image src={bannerUrl} alt={bannerAlt || title} fill sizes="384px" className="object-cover" />
             </div>
           )}
           <div>
-            <label htmlFor="ev-flyer-alt" className={LABEL_CLASS}>
+            <label htmlFor="ev-banner-alt" className={LABEL_CLASS}>
               IMAGE ALT TEXT
             </label>
             <input
-              id="ev-flyer-alt"
-              value={flyerAlt}
-              onChange={(e) => setFlyerAlt(e.target.value)}
+              id="ev-banner-alt"
+              value={bannerAlt}
+              onChange={(e) => setBannerAlt(e.target.value)}
               className={FIELD_CLASS}
             />
           </div>
@@ -351,40 +400,68 @@ export function EventForm({ mode, eventId, initial }: EventFormProps) {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              disabled={isFlyerPending}
+              disabled={isBannerPending}
               className={`rounded-sm border border-outline-variant px-3 py-2 text-sm font-medium text-on-surface-variant transition-colors hover:border-primary hover:text-primary disabled:opacity-50 ${FOCUS_RING}`}
             >
-              {isFlyerPending ? "Uploading…" : flyerUrl ? "Replace image" : "Upload image"}
+              {isBannerPending ? "Uploading…" : bannerUrl ? "Replace image" : "Upload image"}
             </button>
             <input
               ref={fileInputRef}
               type="file"
               accept="image/jpeg,image/png,image/webp"
-              onChange={handleFlyerUpload}
+              onChange={handleBannerUpload}
               className="hidden"
             />
-            {flyerUrl && (
+            {bannerUrl && (
               <button
                 type="button"
-                onClick={handleFlyerRemove}
-                disabled={isFlyerPending}
+                onClick={handleBannerRemove}
+                disabled={isBannerPending}
                 className={`rounded-sm border border-error px-3 py-2 text-sm font-medium text-error transition-colors hover:bg-error hover:text-white disabled:opacity-50 ${FOCUS_RING}`}
               >
                 Remove
               </button>
             )}
           </div>
-          {flyerError && (
+          {bannerError && (
             <p role="alert" className="text-sm text-error">
-              {flyerError}
+              {bannerError}
             </p>
           )}
-          <p className="text-xs text-on-surface-variant">JPEG, PNG, or WebP. Up to 5MB.</p>
+          <p className="text-xs text-on-surface-variant">
+            JPEG, PNG, or WebP. Up to 5MB. Shown as the hero image at the top of the event page.
+          </p>
         </section>
       ) : (
         <section>
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-on-surface-variant">Flyer</h2>
-          <p className="mt-2 text-sm text-on-surface-variant">Save the event first to upload a flyer image.</p>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-on-surface-variant">Banner Image</h2>
+          <p className="mt-2 text-sm text-on-surface-variant">Save the event first to upload a banner image.</p>
+        </section>
+      )}
+
+      {mode === "edit" && eventId ? (
+        <section className="space-y-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-on-surface-variant">Event Flyers</h2>
+          <p className="text-xs text-on-surface-variant">
+            Print/social-ready flyers at fixed aspect ratios. JPEG, PNG, or WebP, up to 5MB each.
+          </p>
+          <div className="grid gap-6 sm:grid-cols-3">
+            {flyerRatioValues.map((ratio) => (
+              <FlyerSlot
+                key={ratio}
+                eventId={eventId}
+                ratio={ratio}
+                initialUrl={
+                  ratio === "3x5" ? values.flyer3x5Url : ratio === "4x5" ? values.flyer4x5Url : values.flyer9x16Url
+                }
+              />
+            ))}
+          </div>
+        </section>
+      ) : (
+        <section>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-on-surface-variant">Event Flyers</h2>
+          <p className="mt-2 text-sm text-on-surface-variant">Save the event first to upload flyers.</p>
         </section>
       )}
 
@@ -431,6 +508,27 @@ export function EventForm({ mode, eventId, initial }: EventFormProps) {
                 onChange={(e) => setPopupCtaLabel(e.target.value)}
                 className={FIELD_CLASS}
               />
+            </div>
+            <div>
+              <label htmlFor="ev-popup-image" className={LABEL_CLASS}>
+                POP-UP IMAGE
+              </label>
+              <select
+                id="ev-popup-image"
+                value={popupImageSource}
+                onChange={(e) => setPopupImageSource(e.target.value as PopupImageSource)}
+                className={FIELD_CLASS}
+              >
+                {popupImageSourceValues.map((source) => (
+                  <option key={source} value={source}>
+                    {POPUP_IMAGE_LABELS[source]}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-on-surface-variant">
+                Choose which uploaded image shows in the pop-up. If that image hasn&apos;t been uploaded yet, the
+                pop-up shows text only.
+              </p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
@@ -489,6 +587,195 @@ export function EventForm({ mode, eventId, initial }: EventFormProps) {
           </button>
         )}
       </div>
+    </div>
+  );
+}
+
+function FlyerSlot({ eventId, ratio, initialUrl }: { eventId: string; ratio: FlyerRatio; initialUrl: string | null }) {
+  const [url, setUrl] = useState(initialUrl);
+  const [error, setError] = useState("");
+  const [isPending, startTransition] = useTransition();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setError("");
+    const formData = new FormData();
+    formData.set("file", file);
+    startTransition(async () => {
+      try {
+        const result = await uploadEventFlyerRatio(eventId, ratio, formData);
+        setUrl(result.url);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to upload image");
+      }
+    });
+    e.target.value = "";
+  }
+
+  function handleRemove() {
+    setError("");
+    startTransition(async () => {
+      try {
+        await removeEventFlyerRatio(eventId, ratio);
+        setUrl(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to remove image");
+      }
+    });
+  }
+
+  return (
+    <div className="space-y-2">
+      <p className="text-sm font-medium text-on-surface-variant">{FLYER_RATIO_LABELS[ratio]}</p>
+      <div
+        className={`relative w-full overflow-hidden rounded-lg border border-outline-variant bg-surface-container-lowest ${FLYER_RATIO_PREVIEW_CLASS[ratio]}`}
+      >
+        {url && <Image src={url} alt="" fill sizes="200px" className="object-cover" />}
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isPending}
+          className={`rounded-sm border border-outline-variant px-2.5 py-1.5 text-xs font-medium text-on-surface-variant transition-colors hover:border-primary hover:text-primary disabled:opacity-50 ${FOCUS_RING}`}
+        >
+          {isPending ? "Uploading…" : url ? "Replace" : "Upload"}
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          onChange={handleUpload}
+          className="hidden"
+        />
+        {url && (
+          <button
+            type="button"
+            onClick={handleRemove}
+            disabled={isPending}
+            className={`rounded-sm border border-error px-2.5 py-1.5 text-xs font-medium text-error transition-colors hover:bg-error hover:text-white disabled:opacity-50 ${FOCUS_RING}`}
+          >
+            Remove
+          </button>
+        )}
+      </div>
+      {error && (
+        <p role="alert" className="text-xs text-error">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function MediaGallery({ eventId, initialMedia }: { eventId: string; initialMedia: EventMediaRow[] }) {
+  const [media, setMedia] = useState(initialMedia);
+  const [altDraft, setAltDraft] = useState("");
+  const [error, setError] = useState("");
+  const [isPending, startTransition] = useTransition();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setError("");
+    const formData = new FormData();
+    formData.set("file", file);
+    formData.set("alt", altDraft);
+    startTransition(async () => {
+      try {
+        const row = await addEventMedia(eventId, formData);
+        setMedia((prev) => [...prev, row as EventMediaRow]);
+        setAltDraft("");
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to upload file");
+      }
+    });
+    e.target.value = "";
+  }
+
+  function handleRemove(id: string) {
+    setError("");
+    startTransition(async () => {
+      try {
+        await removeEventMedia(id, eventId);
+        setMedia((prev) => prev.filter((item) => item.id !== id));
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to remove upload");
+      }
+    });
+  }
+
+  return (
+    <div className="space-y-4">
+      {media.length > 0 && (
+        <div className="grid gap-4 sm:grid-cols-3">
+          {media.map((item) => (
+            <div key={item.id} className="space-y-2">
+              <div className="relative aspect-video overflow-hidden rounded-lg border border-outline-variant bg-surface-container-lowest">
+                {item.media_type === "image" ? (
+                  <Image src={item.url} alt={item.alt ?? ""} fill sizes="240px" className="object-cover" />
+                ) : (
+                  // eslint-disable-next-line jsx-a11y/media-has-caption
+                  <video src={item.url} controls className="h-full w-full object-cover" />
+                )}
+              </div>
+              {item.media_type === "image" && (
+                <p className="truncate text-xs text-on-surface-variant" title={item.alt ?? ""}>
+                  {item.alt ? `Alt: ${item.alt}` : "No alt text"}
+                </p>
+              )}
+              <button
+                type="button"
+                onClick={() => handleRemove(item.id)}
+                disabled={isPending}
+                className={`w-full rounded-sm border border-error px-3 py-1.5 text-xs font-medium text-error transition-colors hover:bg-error hover:text-white disabled:opacity-50 ${FOCUS_RING}`}
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      <div>
+        <label htmlFor="ev-media-alt" className={LABEL_CLASS}>
+          ALT TEXT (for the next image upload)
+        </label>
+        <input
+          id="ev-media-alt"
+          value={altDraft}
+          onChange={(e) => setAltDraft(e.target.value)}
+          placeholder="Describe the image for screen readers"
+          className={FIELD_CLASS}
+        />
+      </div>
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isPending}
+          className={`rounded-sm border border-outline-variant px-3 py-2 text-sm font-medium text-on-surface-variant transition-colors hover:border-primary hover:text-primary disabled:opacity-50 ${FOCUS_RING}`}
+        >
+          {isPending ? "Uploading…" : "Add image or video"}
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime"
+          onChange={handleUpload}
+          className="hidden"
+        />
+      </div>
+      {error && (
+        <p role="alert" className="text-sm text-error">
+          {error}
+        </p>
+      )}
+      <p className="text-xs text-on-surface-variant">
+        JPEG, PNG, WebP, MP4, WebM, or MOV. Up to 25MB. Shown alongside the description on the event page.
+      </p>
     </div>
   );
 }
