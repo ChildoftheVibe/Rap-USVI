@@ -106,7 +106,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
             <p className="whitespace-pre-line leading-relaxed text-on-surface-variant">{event.description}</p>
           )}
           {media.length > 0 && (
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div id="gallery" className="grid gap-4 sm:grid-cols-2">
               {media.map((item) =>
                 item.media_type === "image" ? (
                   <div key={item.id} className="relative aspect-video overflow-hidden rounded-lg">

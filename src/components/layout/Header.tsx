@@ -12,7 +12,7 @@ import { site } from "@/lib/content";
 const NAV_LINKS = [
   { href: "/#pillars", label: "Pillars" },
   { href: "/#academy", label: "Academy" },
-  { href: "/#events", label: "Events" },
+  { href: "/#events", label: "Upcoming events" },
   { href: "/events", label: "All Events" },
   { href: "/#about", label: "About" },
   { href: "/#contact", label: "Contact" },
