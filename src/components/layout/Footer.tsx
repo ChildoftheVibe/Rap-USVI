@@ -9,15 +9,15 @@ export function Footer() {
           {site.name}
         </div>
         <div className="mb-8 flex flex-wrap justify-center gap-8 text-white/80">
-          <a href="#about" className="decoration-harvest-gold decoration-2 transition-opacity hover:text-white hover:underline">
+          <Link href="/#about" className="decoration-harvest-gold decoration-2 transition-opacity hover:text-white hover:underline">
             Mission
-          </a>
-          <a href="#academy" className="decoration-harvest-gold decoration-2 transition-opacity hover:text-white hover:underline">
+          </Link>
+          <Link href="/#academy" className="decoration-harvest-gold decoration-2 transition-opacity hover:text-white hover:underline">
             Leadership Academy
-          </a>
-          <a href="#events" className="decoration-harvest-gold decoration-2 transition-opacity hover:text-white hover:underline">
+          </Link>
+          <Link href="/#events" className="decoration-harvest-gold decoration-2 transition-opacity hover:text-white hover:underline">
             Point Udall Event
-          </a>
+          </Link>
           <Link href="/privacy" className="decoration-harvest-gold decoration-2 transition-opacity hover:text-white hover:underline">
             Privacy Policy
           </Link>

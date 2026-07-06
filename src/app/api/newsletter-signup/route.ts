@@ -1,19 +1,9 @@
-import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { newsletterSignupSchema } from "@/lib/validation/newsletter";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { verifyTurnstileToken } from "@/lib/turnstile";
 import { isRateLimited } from "@/lib/ratelimit";
-
-function hashIp(ip: string): string {
-  const salt = process.env.IP_HASH_SALT ?? "rap-usvi";
-  return createHash("sha256").update(`${salt}:${ip}`).digest("hex");
-}
-
-function getClientIp(request: Request): string {
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  return forwardedFor?.split(",")[0]?.trim() || "0.0.0.0";
-}
+import { getClientIp, hashIp, isHoneypotTripped } from "@/lib/requestMeta";
 
 export async function POST(request: Request) {
   let body: unknown;
@@ -24,13 +14,7 @@ export async function POST(request: Request) {
   }
 
   // Honeypot: silently accept-and-drop so bots don't learn they were caught.
-  if (
-    typeof body === "object" &&
-    body !== null &&
-    "company" in body &&
-    typeof (body as { company?: unknown }).company === "string" &&
-    (body as { company: string }).company.length > 0
-  ) {
+  if (isHoneypotTripped(body)) {
     return NextResponse.json({ success: true });
   }
 

@@ -8,7 +8,7 @@ const csp = [
   `script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval'" : ""} https://challenges.cloudflare.com`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
-  "img-src 'self' data: blob:",
+  "img-src 'self' data: blob: https://*.supabase.co",
   "frame-src https://challenges.cloudflare.com",
   `connect-src 'self' ${isDev ? "ws: http://localhost:*" : ""} https://challenges.cloudflare.com https://*.supabase.co https://*.posthog.com https://*.sentry.io`,
   "object-src 'none'",
@@ -26,6 +26,11 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  images: {
+    // Event flyer images are uploaded to Supabase Storage and served from its
+    // public object URL, e.g. https://<project-ref>.supabase.co/storage/v1/object/public/...
+    remotePatterns: [{ protocol: "https", hostname: "*.supabase.co", pathname: "/storage/v1/object/public/**" }],
+  },
   async headers() {
     return [
       {
