@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { AddToCalendarButton } from "@/components/cta/AddToCalendarButton";
 import { event } from "@/lib/content";
 
@@ -44,6 +45,12 @@ export function CommunityEvent() {
               </div>
             </div>
             <AddToCalendarButton />
+            <Link
+              href="/events"
+              className="mt-4 inline-block rounded-sm text-sm font-medium text-caribbean-azure underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            >
+              View all upcoming events →
+            </Link>
           </div>
         </div>
       </div>

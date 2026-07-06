@@ -25,9 +25,16 @@ async function getCounts() {
     .select("id", { count: "exact", head: true })
     .eq("status", "new");
 
+  const upcomingEventsCount = await supabase
+    .from("events")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "published")
+    .gte("end_at", new Date().toISOString());
+
   return {
     newsletter: newsletterCount.count ?? 0,
     newInquiries: newStatusCount.count ?? 0,
+    upcomingEvents: upcomingEventsCount.count ?? 0,
     byInterest: interestAreas.map((area, i) => ({
       ...area,
       count: interestCounts[i].count ?? 0,
@@ -48,6 +55,14 @@ export default async function AdminOverviewPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <Link
+          href="/admin/events"
+          className="rounded-lg border border-outline-variant bg-surface-container-lowest p-6 transition-colors hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+        >
+          <p className="text-sm font-medium uppercase tracking-wide text-on-surface-variant">Upcoming Events</p>
+          <p className="mt-2 text-3xl font-semibold text-primary">{counts.upcomingEvents}</p>
+        </Link>
+
         <Link
           href="/admin/newsletter"
           className="rounded-lg border border-outline-variant bg-surface-container-lowest p-6 transition-colors hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"

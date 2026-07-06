@@ -1,14 +1,32 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { openJoinModal } from "@/components/cta/JoinMovementModal";
 import { DonateButton } from "@/components/cta/DonateButton";
 import { site } from "@/lib/content";
+
+/** Same-page section anchors need a plain `<a>`; the events listing is a real route and benefits from client-side nav. */
+function NavLink({ href, className, onClick, children }: { href: string; className: string; onClick?: () => void; children: React.ReactNode }) {
+  if (href.startsWith("#")) {
+    return (
+      <a href={href} className={className} onClick={onClick}>
+        {children}
+      </a>
+    );
+  }
+  return (
+    <Link href={href} className={className} onClick={onClick}>
+      {children}
+    </Link>
+  );
+}
 
 const NAV_LINKS = [
   { href: "#pillars", label: "Pillars" },
   { href: "#academy", label: "Academy" },
   { href: "#events", label: "Events" },
+  { href: "/events", label: "All Events" },
   { href: "#about", label: "About" },
   { href: "#contact", label: "Contact" },
 ];
@@ -47,13 +65,13 @@ export function Header() {
         {/* Desktop navigation */}
         <div className="hidden items-center gap-6 lg:flex xl:gap-8">
           {NAV_LINKS.map((link) => (
-            <a
+            <NavLink
               key={link.href}
               href={link.href}
               className="rounded-md px-1 py-1 text-on-surface-variant transition-colors hover:text-primary"
             >
               {link.label}
-            </a>
+            </NavLink>
           ))}
         </div>
 
@@ -89,13 +107,13 @@ export function Header() {
           <ul className="flex flex-col">
             {NAV_LINKS.map((link) => (
               <li key={link.href}>
-                <a
+                <NavLink
                   href={link.href}
                   onClick={() => setMenuOpen(false)}
                   className="block rounded-md py-3 text-base text-on-surface-variant transition-colors hover:text-primary"
                 >
                   {link.label}
-                </a>
+                </NavLink>
               </li>
             ))}
           </ul>

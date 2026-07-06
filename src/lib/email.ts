@@ -2,7 +2,7 @@ import { Resend } from "resend";
 import type { InquiryInput } from "@/lib/validation/inquiry";
 import { interestAreas, site, contact } from "@/lib/content";
 
-const BRAND = {
+export const BRAND = {
   primary: "#0047ab",
   gold: "#e5b80b",
   ink: "#191c1d",
@@ -12,7 +12,7 @@ const BRAND = {
   logoUrl: `${site.url}/logo/rap-logo-email.png`,
 };
 
-function escapeHtml(value: string): string {
+export function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -25,14 +25,14 @@ function interestLabel(value: string): string {
   return interestAreas.find((a) => a.value === value)?.label ?? value;
 }
 
-function getResendClient(): Resend | null {
+export function getResendClient(): Resend | null {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) return null;
   return new Resend(apiKey);
 }
 
 /** Shared branded shell (table-based layout + inline styles for email-client compatibility). */
-function renderEmailShell(bodyHtml: string): string {
+export function renderEmailShell(bodyHtml: string): string {
   return `
 <!DOCTYPE html>
 <html lang="en">
@@ -80,7 +80,7 @@ function renderEmailShell(bodyHtml: string): string {
 </html>`;
 }
 
-function renderField(label: string, value: string): string {
+export function renderField(label: string, value: string): string {
   return `
     <tr>
       <td style="padding:4px 12px 4px 0; color:${BRAND.inkVariant}; font-size:12px; font-weight:bold; text-transform:uppercase; letter-spacing:0.04em; white-space:nowrap; vertical-align:top;">
