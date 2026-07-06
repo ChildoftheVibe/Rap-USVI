@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { inquirySchema, type InquiryInput } from "@/lib/validation/inquiry";
 import { interestAreas } from "@/lib/content";
-import { CONTACT_INTEREST_EVENT } from "@/lib/scrollToContact";
+import { CONTACT_INTEREST_EVENT, consumePendingContactInterest } from "@/lib/scrollToContact";
 import type { InterestArea } from "@/lib/content";
 import { useTurnstile } from "@/lib/useTurnstile";
 
@@ -40,6 +40,14 @@ export function StakeholderInquiryForm() {
     setTurnstileToken(token);
     setValue("turnstileToken", token);
   });
+
+  // Picks up an interest area stashed by a Donate/Enrollment click on another
+  // page (that click navigated here via "/#contact" since this form wasn't
+  // mounted yet to receive the live event below).
+  useEffect(() => {
+    const pending = consumePendingContactInterest();
+    if (pending) setValue("interestArea", pending);
+  }, [setValue]);
 
   useEffect(() => {
     function handlePreset(e: Event) {

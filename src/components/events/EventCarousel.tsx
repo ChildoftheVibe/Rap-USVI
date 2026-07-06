@@ -129,7 +129,7 @@ function EventSlide({ event }: { event: EventRow }) {
         )}
         <div className="flex flex-wrap gap-4">
           {event.rsvp_enabled && (
-            <Link href={`/events/${event.slug}#rsvp`} className="btn btn-lg btn-primary w-full sm:w-max">
+            <Link href={`/events/${event.slug}`} className="btn btn-lg btn-primary w-full sm:w-max">
               RSVP Now
             </Link>
           )}
