@@ -10,8 +10,8 @@ export const site = {
 };
 
 export const contact = {
-  phone: "(904) 907-6011",
-  phoneHref: "tel:+19049076011",
+  phone: "(954) 539-2675",
+  phoneHref: "tel:+19545392675",
   emails: ["info@rap-usvi.org", "Donate@rap-usvi.org"],
   location: "St. Croix, U.S. Virgin Islands",
   chairman: "Earl L. Philip",
