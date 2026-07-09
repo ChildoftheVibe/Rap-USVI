@@ -1,15 +1,9 @@
-"use client";
-
-import { scrollToContactWithInterest } from "@/lib/scrollToContact";
+import Link from "next/link";
 
 export function DonateButton({ className }: { className?: string }) {
   return (
-    <button
-      type="button"
-      onClick={() => scrollToContactWithInterest("donation_inquiry")}
-      className={className ?? "btn btn-sm btn-gold"}
-    >
+    <Link href="/donate" className={className ?? "btn btn-sm btn-gold"}>
       Donate
-    </button>
+    </Link>
   );
 }

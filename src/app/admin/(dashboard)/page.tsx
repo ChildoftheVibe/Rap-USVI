@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { interestAreas, type InterestArea } from "@/lib/content";
+import { formatUsd } from "@/lib/donations";
 
 export const metadata: Metadata = {
   title: "Overview | Admin",
@@ -31,10 +32,15 @@ async function getCounts() {
     .eq("status", "published")
     .gte("end_at", new Date().toISOString());
 
+  const { data: completedDonations } = await supabase.from("donations").select("amount_cents").eq("status", "completed");
+  const donationsRaisedCents = (completedDonations ?? []).reduce((sum, r) => sum + r.amount_cents, 0);
+
   return {
     newsletter: newsletterCount.count ?? 0,
     newInquiries: newStatusCount.count ?? 0,
     upcomingEvents: upcomingEventsCount.count ?? 0,
+    donationsRaisedCents,
+    donationsCount: (completedDonations ?? []).length,
     byInterest: interestAreas.map((area, i) => ({
       ...area,
       count: interestCounts[i].count ?? 0,
@@ -69,6 +75,17 @@ export default async function AdminOverviewPage() {
         >
           <p className="text-sm font-medium uppercase tracking-wide text-on-surface-variant">Newsletter Sign-ups</p>
           <p className="mt-2 text-3xl font-semibold text-primary">{counts.newsletter}</p>
+        </Link>
+
+        <Link
+          href="/admin/donations"
+          className="rounded-lg border border-outline-variant bg-surface-container-lowest p-6 transition-colors hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+        >
+          <p className="text-sm font-medium uppercase tracking-wide text-on-surface-variant">Donations Raised</p>
+          <p className="mt-2 text-3xl font-semibold text-primary">{formatUsd(counts.donationsRaisedCents)}</p>
+          <p className="mt-1 text-xs text-on-surface-variant">
+            {counts.donationsCount} completed gift{counts.donationsCount === 1 ? "" : "s"}
+          </p>
         </Link>
 
         {counts.byInterest.map((area) => (

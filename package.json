@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
+    "@paypal/react-paypal-js": "^10.1.2",
     "@sentry/nextjs": "^10.63.0",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.110.0",

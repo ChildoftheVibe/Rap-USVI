@@ -146,9 +146,11 @@ export async function sendSubmitterAutoReply(input: InquiryInput): Promise<void>
 
   const donationNote =
     input.interestArea === "donation_inquiry"
-      ? `<p>Online giving is coming soon. In the meantime, reach out to
+      ? `<p>You can give securely online anytime at
+         <a href="${site.url}/donate" style="color:${BRAND.primary};">${site.domain}/donate</a>,
+         or reach out to
          <a href="mailto:${contact.emails[1] ?? contact.emails[0]}" style="color:${BRAND.primary};">${contact.emails[1] ?? contact.emails[0]}</a>
-         and our team will follow up directly about how to give.</p>`
+         for larger or planned gifts.</p>`
       : "";
 
   const body = `
