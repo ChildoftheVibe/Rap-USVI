@@ -24,7 +24,7 @@ export const eventSchema = z
       .min(1, "Slug is required")
       .max(200)
       .regex(slugPattern, "Use lowercase letters, numbers, and hyphens only"),
-    description: z.string().trim().max(5000).optional().or(z.literal("")),
+    description: z.string().trim().max(20000).optional().or(z.literal("")),
     locationName: z.string().trim().max(200).optional().or(z.literal("")),
     locationAddress: z.string().trim().max(300).optional().or(z.literal("")),
     startAt: localDateTimeSchema,

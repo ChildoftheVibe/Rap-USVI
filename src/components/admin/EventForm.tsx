@@ -17,6 +17,7 @@ import { slugify, flyerRatioValues } from "@/lib/events";
 import type { FlyerRatio, EventMediaRow } from "@/lib/events";
 import type { EventStatus, PopupImageSource } from "@/lib/validation/event";
 import { popupImageSourceValues } from "@/lib/validation/event";
+import { RichTextEditor } from "@/components/admin/RichTextEditor";
 
 const FOCUS_RING =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2";
@@ -255,13 +256,7 @@ export function EventForm({ mode, eventId, initial, initialMedia }: EventFormPro
           <label htmlFor="ev-description" className={LABEL_CLASS}>
             DESCRIPTION
           </label>
-          <textarea
-            id="ev-description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={5}
-            className={FIELD_CLASS}
-          />
+          <RichTextEditor id="ev-description" value={description} onChange={setDescription} />
         </div>
         {mode === "edit" && eventId ? (
           <div>
