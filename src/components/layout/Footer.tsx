@@ -18,6 +18,12 @@ export function Footer() {
           <Link href="/#events" className="decoration-harvest-gold decoration-2 transition-opacity hover:text-white hover:underline">
             Point Udall Event
           </Link>
+          <Link href="/donate" className="decoration-harvest-gold decoration-2 transition-opacity hover:text-white hover:underline">
+            Donate
+          </Link>
+          <Link href="/donation-policy" className="decoration-harvest-gold decoration-2 transition-opacity hover:text-white hover:underline">
+            Donation Policy
+          </Link>
           <Link href="/privacy" className="decoration-harvest-gold decoration-2 transition-opacity hover:text-white hover:underline">
             Privacy Policy
           </Link>

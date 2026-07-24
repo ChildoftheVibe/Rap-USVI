@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createServerSupabaseClient, createServiceRoleClient } from "@/lib/supabase/server";
 import { eventSchema, eventStatusValues, type EventInput, type EventStatus } from "@/lib/validation/event";
 import { astLocalInputToIso, type FlyerRatio } from "@/lib/events";
+import { sanitizeEventDescription } from "@/lib/sanitizeHtml";
 import { resolvePendingWaitlistPromotions } from "@/lib/eventEmail";
 import type { RsvpStatus } from "@/lib/events";
 
@@ -56,7 +57,7 @@ function toEventRecord(data: EventInput) {
   return {
     title: data.title,
     slug: data.slug,
-    description: data.description || "",
+    description: data.description ? sanitizeEventDescription(data.description) : "",
     location_name: data.locationName || "",
     location_address: data.locationAddress || "",
     start_at: astLocalInputToIso(data.startAt),

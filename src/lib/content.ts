@@ -18,6 +18,22 @@ export const contact = {
   chairmanTitle: "Chairman / President",
 };
 
+export const donation = {
+  // TODO: replace with the organization's actual EIN before launch.
+  ein: "XX-XXXXXXX",
+  minCents: 500,
+  maxCents: 2_500_000,
+  presetAmounts: [25, 50, 100, 250, 500],
+  impactByAmount: [
+    { minAmount: 500, message: "Funds printed civic-education materials for a Point Udall community workday." },
+    { minAmount: 250, message: "Sponsors a Leadership Academy cadet's uniform and training gear for a month." },
+    { minAmount: 100, message: "Covers outreach materials for a territorial voter-empowerment event." },
+    { minAmount: 50, message: "Supplies a Leadership Academy student with textbooks for a semester." },
+    { minAmount: 25, message: "Helps print and distribute civic-engagement flyers across St. Croix." },
+    { minAmount: 0, message: "Every gift helps restore the promise of our paradise." },
+  ],
+};
+
 export const mission = {
   eyebrow: "U.S. VIRGIN ISLANDS CIVIC MOVEMENT",
   headline: "Our Mission & Core Mandate",

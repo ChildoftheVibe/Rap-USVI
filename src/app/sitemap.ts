@@ -3,7 +3,7 @@ import { site } from "@/lib/content";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const routes = ["", "/privacy", "/terms", "/accessibility", "/events"];
+  const routes = ["", "/privacy", "/terms", "/accessibility", "/events", "/donate", "/donation-policy"];
   const staticEntries = routes.map((route) => ({
     url: `${site.url}${route}`,
     lastModified: new Date(),

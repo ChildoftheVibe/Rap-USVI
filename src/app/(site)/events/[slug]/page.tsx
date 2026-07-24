@@ -103,7 +103,10 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
             </div>
           )}
           {event.description && (
-            <p className="whitespace-pre-line leading-relaxed text-on-surface-variant">{event.description}</p>
+            <div
+              className="leading-relaxed text-on-surface-variant [&_p]:mb-4 [&_p:last-child]:mb-0"
+              dangerouslySetInnerHTML={{ __html: event.description }}
+            />
           )}
           {media.length > 0 && (
             <div id="gallery" className="grid gap-4 sm:grid-cols-2">
