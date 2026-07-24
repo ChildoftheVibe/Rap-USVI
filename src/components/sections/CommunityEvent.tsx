@@ -119,7 +119,10 @@ export async function CommunityEvent() {
               </span>
             </div>
             {pastEvent.description && (
-              <p className="mb-8 line-clamp-5 leading-relaxed text-on-surface-variant">{pastEvent.description}</p>
+              <div
+                className="mb-8 line-clamp-5 leading-relaxed text-on-surface-variant [&_p]:mb-2 [&_p:last-child]:mb-0"
+                dangerouslySetInnerHTML={{ __html: pastEvent.description }}
+              />
             )}
             <div className="flex flex-wrap gap-4">
               {hasMedia ? (

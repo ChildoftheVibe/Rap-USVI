@@ -125,7 +125,10 @@ function EventSlide({ event }: { event: EventRow }) {
           </span>
         </div>
         {event.description && (
-          <p className="mb-8 line-clamp-5 leading-relaxed text-on-surface-variant">{event.description}</p>
+          <div
+            className="mb-8 line-clamp-5 leading-relaxed text-on-surface-variant [&_p]:mb-2 [&_p:last-child]:mb-0"
+            dangerouslySetInnerHTML={{ __html: event.description }}
+          />
         )}
         <div className="flex flex-wrap gap-4">
           {event.rsvp_enabled && (
