@@ -19,8 +19,8 @@ export const contact = {
 };
 
 export const donation = {
-  // TODO: replace with the organization's actual EIN before launch.
-  ein: "XX-XXXXXXX",
+  ein: "41-3545317",
+  mailingAddress: "7901 4th Street N, STE 300, St. Petersburg, FL 33702",
   minCents: 500,
   maxCents: 2_500_000,
   presetAmounts: [25, 50, 100, 250, 500],

@@ -92,6 +92,10 @@ export default function DonatePage() {
                     <p className="mt-1 text-sm text-on-surface-variant">
                       A tax-exempt 501(c)(3) organization. EIN {donation.ein}.
                     </p>
+                    <p className="mt-1 text-sm text-on-surface-variant">{donation.mailingAddress}</p>
+                    <p className="mt-1 text-xs text-on-surface-variant">
+                      Use this EIN and address when claiming your donation for tax purposes.
+                    </p>
                   </div>
                 </div>
                 <div className="mt-4 flex items-start gap-3 border-t border-outline-variant pt-4">
