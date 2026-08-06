@@ -5,12 +5,12 @@ const isDev = process.env.NODE_ENV !== "production";
 
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval'" : ""} https://challenges.cloudflare.com`,
+  `script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval'" : ""} https://challenges.cloudflare.com https://www.paypal.com https://www.sandbox.paypal.com https://www.paypalobjects.com`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
-  "img-src 'self' data: blob: https://*.supabase.co",
-  "frame-src https://challenges.cloudflare.com",
-  `connect-src 'self' ${isDev ? "ws: http://localhost:*" : ""} https://challenges.cloudflare.com https://*.supabase.co https://*.posthog.com https://*.sentry.io`,
+  "img-src 'self' data: blob: https://*.supabase.co https://www.paypalobjects.com https://www.paypal.com https://www.sandbox.paypal.com",
+  "frame-src https://challenges.cloudflare.com https://www.paypal.com https://www.sandbox.paypal.com",
+  `connect-src 'self' ${isDev ? "ws: http://localhost:*" : ""} https://challenges.cloudflare.com https://*.supabase.co https://*.posthog.com https://*.sentry.io https://*.paypal.com`,
   "object-src 'none'",
   "base-uri 'self'",
   "frame-ancestors 'self'",
