@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createServerSupabaseClient, createServiceRoleClient } from "@/lib/supabase/server";
+import { requireAdminUser } from "@/lib/adminAuth";
 
 const VALID_STATUSES = ["new", "reviewed", "archived"] as const;
 type InquiryStatus = (typeof VALID_STATUSES)[number];
@@ -14,13 +15,7 @@ export async function signOut() {
 }
 
 export async function updateInquiryStatus(id: string, status: string) {
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    redirect("/admin/login");
-  }
+  await requireAdminUser();
 
   if (!VALID_STATUSES.includes(status as InquiryStatus)) {
     throw new Error("Invalid status");

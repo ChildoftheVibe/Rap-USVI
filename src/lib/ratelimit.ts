@@ -7,7 +7,7 @@ const MAX_SUBMISSIONS_PER_WINDOW = 5;
 export async function isRateLimited(
   supabase: SupabaseClient,
   ipHash: string,
-  table: "inquiries" | "newsletter_signups" | "event_rsvps" | "donations" = "inquiries"
+  table: "inquiries" | "newsletter_signups" | "event_rsvps" | "donations" | "volunteers" = "inquiries"
 ): Promise<boolean> {
   const windowStart = new Date(Date.now() - WINDOW_MINUTES * 60_000).toISOString();
 

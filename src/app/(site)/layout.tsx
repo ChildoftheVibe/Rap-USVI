@@ -1,6 +1,7 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { JoinMovementModal } from "@/components/cta/JoinMovementModal";
+import { VolunteerIntakeModal } from "@/components/volunteers/VolunteerIntakeModal";
 import { EventPopup, type PopupEventData } from "@/components/events/EventPopup";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { resolvePopupImageUrl } from "@/lib/events";
@@ -62,6 +63,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       <main id="main-content">{children}</main>
       <Footer />
       <JoinMovementModal />
+      <VolunteerIntakeModal />
       <EventPopup event={popupEvent} />
     </>
   );

@@ -2,7 +2,8 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { createServerSupabaseClient, createServiceRoleClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/server";
+import { requireAdminUser } from "@/lib/adminAuth";
 import { eventSchema, eventStatusValues, type EventInput, type EventStatus } from "@/lib/validation/event";
 import { astLocalInputToIso, type FlyerRatio } from "@/lib/events";
 import { sanitizeEventDescription } from "@/lib/sanitizeHtml";
@@ -35,14 +36,7 @@ const FLYER_RATIO_COLUMNS: Record<FlyerRatio, { url: string; path: string }> = {
 };
 
 async function requireUser() {
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    redirect("/admin/login");
-  }
-  return user;
+  return requireAdminUser();
 }
 
 function parseOrThrow(input: EventInput) {

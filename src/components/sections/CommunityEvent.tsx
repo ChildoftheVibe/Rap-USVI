@@ -4,6 +4,7 @@ import { createServiceRoleClient } from "@/lib/supabase/server";
 import { EventCarousel } from "@/components/events/EventCarousel";
 import { formatEventDateBadge, formatEventTime } from "@/lib/events";
 import type { EventRow } from "@/lib/events";
+import { sanitizeStoredDescription, withSanitizedDescription } from "@/lib/sanitizeHtml";
 
 // Same filter as the all-events page: published events, ending in the future,
 // soonest first — so this section always mirrors what's live on /events.
@@ -65,7 +66,10 @@ export async function CommunityEvent() {
       <section className="bg-island-sand py-24" id="events">
         <div className="mx-auto max-w-container-max px-margin-mobile md:px-margin-desktop">
           <SectionHeading heading="Upcoming Events" />
-          <EventCarousel events={upcomingEvents} />
+          {/* Sanitize before the Client Component boundary — EventCarousel
+              renders these descriptions with dangerouslySetInnerHTML, and
+              sanitize-html only runs on the server. */}
+          <EventCarousel events={upcomingEvents.map(withSanitizedDescription)} />
         </div>
       </section>
     );
@@ -121,7 +125,7 @@ export async function CommunityEvent() {
             {pastEvent.description && (
               <div
                 className="mb-8 line-clamp-5 leading-relaxed text-on-surface-variant [&_p]:mb-2 [&_p:last-child]:mb-0"
-                dangerouslySetInnerHTML={{ __html: pastEvent.description }}
+                dangerouslySetInnerHTML={{ __html: sanitizeStoredDescription(pastEvent.description) }}
               />
             )}
             <div className="flex flex-wrap gap-4">

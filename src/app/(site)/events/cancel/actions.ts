@@ -16,6 +16,14 @@ export interface CancelRsvpResult {
  * same trust model as the email-unsubscribe links elsewhere in the app.
  */
 export async function cancelRsvpByToken(token: string): Promise<CancelRsvpResult> {
+  // This is the only Server Action reachable without a session, and Server
+  // Actions share a single global body-size limit (raised to 25MB for admin
+  // media uploads). Reject anything that isn't shaped like a cancel token
+  // before it reaches the database.
+  if (typeof token !== "string" || token.length < 16 || token.length > 128) {
+    return { success: false, message: "This cancellation link is invalid or has expired." };
+  }
+
   const supabase = createServiceRoleClient();
 
   const { data: rsvp } = await supabase

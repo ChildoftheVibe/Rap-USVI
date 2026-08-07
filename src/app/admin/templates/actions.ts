@@ -2,18 +2,12 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { createServerSupabaseClient, createServiceRoleClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/server";
+import { requireAdminUser } from "@/lib/adminAuth";
 import { emailTemplateSchema, type EmailTemplateInput } from "@/lib/validation/emailTemplate";
 
 async function requireUser() {
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    redirect("/admin/login");
-  }
-  return user;
+  return requireAdminUser();
 }
 
 function parseOrThrow(input: EmailTemplateInput) {

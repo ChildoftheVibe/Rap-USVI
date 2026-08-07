@@ -1,15 +1,13 @@
 import { NextResponse } from "next/server";
-import { createServerSupabaseClient, createServiceRoleClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/server";
+import { getAdminUserOrNull } from "@/lib/adminAuth";
 import { toCsv, csvFilename } from "@/lib/csv";
 import { interestAreas } from "@/lib/content";
 
 const INTEREST_VALUES = interestAreas.map((a) => a.value);
 
 export async function GET(request: Request) {
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getAdminUserOrNull();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

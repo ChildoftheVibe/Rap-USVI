@@ -143,3 +143,33 @@ export const interestAreas = [
 ] as const;
 
 export type InterestArea = (typeof interestAreas)[number]["value"];
+
+export const availabilityDays = [
+  { value: "mon", label: "Monday" },
+  { value: "tue", label: "Tuesday" },
+  { value: "wed", label: "Wednesday" },
+  { value: "thu", label: "Thursday" },
+  { value: "fri", label: "Friday" },
+  { value: "sat", label: "Saturday" },
+  { value: "sun", label: "Sunday" },
+] as const;
+
+export const availabilityHoursOptions = [
+  { value: "mornings", label: "Mornings" },
+  { value: "afternoons", label: "Afternoons" },
+  { value: "evenings", label: "Evenings" },
+  { value: "flexible", label: "Flexible / Any time" },
+] as const;
+
+export const commitmentLevels = [
+  { value: "one_time", label: "One-time event" },
+  { value: "weekly", label: "Weekly" },
+  { value: "monthly", label: "Monthly" },
+  { value: "ongoing", label: "Ongoing / As needed" },
+] as const;
+
+export const certificationOptions = [
+  { value: "cpr", label: "CPR" },
+  { value: "first_aid", label: "First Aid" },
+  { value: "other", label: "Other" },
+] as const;

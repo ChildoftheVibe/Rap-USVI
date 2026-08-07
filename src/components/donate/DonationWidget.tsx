@@ -2,10 +2,12 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import Script from "next/script";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import type { OnApproveData, OnApproveActions } from "@paypal/paypal-js";
 import { contact, donation } from "@/lib/content";
 import { formatUsd } from "@/lib/donations";
+import { useTurnstile } from "@/lib/useTurnstile";
 
 type Selection = number | "custom";
 type WidgetState = "idle" | "error" | "success";
@@ -27,6 +29,9 @@ interface SuccessInfo {
 
 export function DonationWidget() {
   const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const turnstileContainerRef = useTurnstile(turnstileSiteKey, setTurnstileToken);
 
   const [selection, setSelection] = useState<Selection>(donation.presetAmounts[1]);
   const [customAmount, setCustomAmount] = useState("");
@@ -230,11 +235,18 @@ export function DonationWidget() {
           </p>
         )}
 
+        {turnstileSiteKey && (
+          <div className="mt-6">
+            <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" strategy="afterInteractive" />
+            <div ref={turnstileContainerRef} />
+          </div>
+        )}
+
         <div className="mt-6">
           <PayPalButtons
             style={{ layout: "vertical", label: "donate" }}
-            disabled={!amountValid}
-            forceReRender={[amountDollars, donorName, email, dedication]}
+            disabled={!amountValid || (!!turnstileSiteKey && !turnstileToken)}
+            forceReRender={[amountDollars, donorName, email, dedication, turnstileToken]}
             createOrder={async () => {
               setState("idle");
               setErrorMessage("");
@@ -247,6 +259,7 @@ export function DonationWidget() {
                   email,
                   dedication,
                   company,
+                  turnstileToken,
                 }),
               });
               const body = await res.json().catch(() => ({}));

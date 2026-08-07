@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { unsubscribeUrl } from "@/lib/unsubscribe";
+import { escapeHtml } from "@/lib/email";
 
 // Resend's batch endpoint caps at 100 emails per request.
 const BATCH_SIZE = 100;
@@ -16,15 +17,18 @@ const BATCH_SIZE = 100;
  * silently miss matches on later recipients.
  */
 export function injectUnsubscribeLink(html: string, url: string): string {
+  // The replacement is a function, not a string: a string replacement makes
+  // `$&`, `` $` ``, `$'` and `$1` in the URL expand into surrounding template
+  // text instead of being inserted literally.
   if (/\{\{\s*unsubscribe_url\s*\}\}/i.test(html)) {
-    return html.replace(/\{\{\s*unsubscribe_url\s*\}\}/gi, url);
+    return html.replace(/\{\{\s*unsubscribe_url\s*\}\}/gi, () => url);
   }
 
   const footer = `
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:24px;">
   <tr>
     <td style="padding:16px 8px; text-align:center; font-size:12px; color:#737784; font-family:Arial, Helvetica, sans-serif;">
-      <a href="${url}" style="color:#737784; text-decoration:underline;">Unsubscribe</a> from these emails.
+      <a href="${escapeHtml(url)}" style="color:#737784; text-decoration:underline;">Unsubscribe</a> from these emails.
     </td>
   </tr>
 </table>`;

@@ -1,6 +1,15 @@
 import { Resend } from "resend";
 import type { InquiryInput } from "@/lib/validation/inquiry";
-import { interestAreas, site, contact } from "@/lib/content";
+import type { VolunteerInput } from "@/lib/validation/volunteer";
+import {
+  interestAreas,
+  site,
+  contact,
+  availabilityDays,
+  availabilityHoursOptions,
+  commitmentLevels,
+  certificationOptions,
+} from "@/lib/content";
 
 export const BRAND = {
   primary: "#0047ab",
@@ -133,6 +142,69 @@ export async function sendStaffNotification(input: InquiryInput): Promise<void> 
     to,
     replyTo: input.email,
     subject: `New inquiry: ${interestLabel(input.interestArea)} — ${input.fullName}`,
+    html: renderEmailShell(body),
+  });
+}
+
+export async function sendVolunteerStaffNotification(input: VolunteerInput): Promise<void> {
+  const resend = getResendClient();
+  const to = process.env.RESEND_STAFF_NOTIFY_TO?.split(",").map((s) => s.trim());
+  const from = process.env.RESEND_FROM_EMAIL;
+  if (!resend || !to?.length || !from) {
+    throw new Error("Resend is not fully configured (RESEND_API_KEY / RESEND_STAFF_NOTIFY_TO / RESEND_FROM_EMAIL)");
+  }
+
+  const submittedAt = new Date().toLocaleString("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "America/St_Thomas",
+  });
+
+  const dayLabels = input.availabilityDays
+    .map((d) => availabilityDays.find((a) => a.value === d)?.label ?? d)
+    .join(", ");
+  const hoursLabel = availabilityHoursOptions.find((h) => h.value === input.availabilityHours)?.label ?? input.availabilityHours;
+  const commitmentLabel = commitmentLevels.find((c) => c.value === input.commitmentLevel)?.label ?? input.commitmentLevel;
+  const certificationLabels = (input.certifications ?? [])
+    .map((c) => certificationOptions.find((o) => o.value === c)?.label ?? c)
+    .join(", ");
+
+  const body = `
+    <div style="display:inline-block; background-color:${BRAND.gold}; color:${BRAND.primary}; font-size:12px; font-weight:bold; text-transform:uppercase; letter-spacing:0.04em; padding:4px 12px; border-radius:999px; margin-bottom:16px;">
+      New Volunteer Sign-up
+    </div>
+    <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%; margin-bottom:20px;">
+      ${renderField("Name", escapeHtml(input.fullName))}
+      ${renderField("Phone", `<a href="tel:${escapeHtml(input.phone)}" style="color:${BRAND.primary};">${escapeHtml(input.phone)}</a>`)}
+      ${renderField("Email", `<a href="mailto:${escapeHtml(input.email)}" style="color:${BRAND.primary};">${escapeHtml(input.email)}</a>`)}
+      ${renderField("Industry", escapeHtml(input.industry))}
+      ${renderField("Available days", escapeHtml(dayLabels))}
+      ${renderField("Available hours", escapeHtml(hoursLabel))}
+      ${renderField("Commitment level", escapeHtml(commitmentLabel))}
+      ${certificationLabels ? renderField("Certifications", escapeHtml(certificationLabels)) : ""}
+      ${renderField("Submitted", submittedAt + " AST")}
+    </table>
+    ${
+      input.skillsExperience
+        ? `<div style="border-top:1px solid ${BRAND.outline}; padding-top:16px;">
+      <div style="font-size:12px; font-weight:bold; text-transform:uppercase; letter-spacing:0.04em; color:${BRAND.inkVariant}; margin-bottom:8px;">
+        Skills &amp; Experience
+      </div>
+      <div style="background-color:${BRAND.surface}; border-radius:8px; padding:16px; color:${BRAND.ink};">
+        ${escapeHtml(input.skillsExperience).replace(/\n/g, "<br>")}
+      </div>
+    </div>`
+        : ""
+    }
+    <p style="margin-top:20px; color:${BRAND.inkVariant}; font-size:13px;">
+      Reply directly to this email to respond to ${escapeHtml(input.fullName)} — Reply-To is already set to their address.
+    </p>`;
+
+  await resend.emails.send({
+    from,
+    to,
+    replyTo: input.email,
+    subject: `New volunteer sign-up: ${input.fullName}`,
     html: renderEmailShell(body),
   });
 }

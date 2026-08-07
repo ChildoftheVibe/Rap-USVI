@@ -5,6 +5,7 @@ import { createServiceRoleClient } from "@/lib/supabase/server";
 import { computeAvailability, formatEventDateRange, getEventRsvpSummary } from "@/lib/events";
 import type { EventRow, EventMediaRow } from "@/lib/events";
 import { EventRsvpForm } from "@/components/forms/EventRsvpForm";
+import { sanitizeStoredDescription } from "@/lib/sanitizeHtml";
 import { site } from "@/lib/content";
 
 // Capacity/spots-left must always be live, and this must never depend on
@@ -105,7 +106,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           {event.description && (
             <div
               className="leading-relaxed text-on-surface-variant [&_p]:mb-4 [&_p:last-child]:mb-0"
-              dangerouslySetInnerHTML={{ __html: event.description }}
+              dangerouslySetInnerHTML={{ __html: sanitizeStoredDescription(event.description) }}
             />
           )}
           {media.length > 0 && (

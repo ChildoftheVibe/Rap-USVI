@@ -60,6 +60,22 @@ export async function POST(request: Request) {
     case "PAYMENT.CAPTURE.COMPLETED": {
       if (row.status !== "pending") break;
 
+      // Same check the primary capture path makes: never mark a donation
+      // complete for an amount or currency that doesn't match what we recorded
+      // when the order was created. The signature proves the event came from
+      // PayPal; it doesn't prove it's for the amount we asked for.
+      const capturedCents = resource.amount ? Math.round(parseFloat(resource.amount.value) * 100) : null;
+      if (capturedCents !== row.amount_cents || resource.amount?.currency_code !== row.currency) {
+        console.error("PayPal webhook capture amount/currency mismatch", {
+          donationId: row.id,
+          expectedCents: row.amount_cents,
+          expectedCurrency: row.currency,
+          received: resource.amount,
+        });
+        await supabase.from("donations").update({ status: "failed" }).eq("id", row.id).eq("status", "pending");
+        break;
+      }
+
       const completedAt = new Date().toISOString();
       const payerEmail = resource.payer?.email_address ?? null;
       const payerName = resource.payer?.name

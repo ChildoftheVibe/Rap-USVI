@@ -9,6 +9,7 @@ import { interestAreas } from "@/lib/content";
 import { CONTACT_INTEREST_EVENT, consumePendingContactInterest } from "@/lib/scrollToContact";
 import type { InterestArea } from "@/lib/content";
 import { useTurnstile } from "@/lib/useTurnstile";
+import { openVolunteerModal } from "@/components/volunteers/VolunteerIntakeModal";
 
 type SubmitState = "idle" | "submitting" | "success" | "error";
 
@@ -22,6 +23,7 @@ export function StakeholderInquiryForm() {
     register,
     handleSubmit,
     setValue,
+    watch,
     reset,
     formState: { errors },
   } = useForm<InquiryInput>({
@@ -35,6 +37,9 @@ export function StakeholderInquiryForm() {
       turnstileToken: "",
     },
   });
+
+  const interestArea = watch("interestArea");
+  const isVolunteerInterest = interestArea === "volunteer_opportunities";
 
   const turnstileContainerRef = useTurnstile(siteKey, (token) => {
     setTurnstileToken(token);
@@ -165,41 +170,59 @@ export function StakeholderInquiryForm() {
           </select>
         </div>
 
-        <div>
-          <label htmlFor="message" className="mb-2 block font-medium text-on-surface-variant">
-            MESSAGE
-          </label>
-          <textarea
-            id="message"
-            rows={4}
-            className="w-full rounded-sm border border-outline-variant bg-surface px-4 py-3 outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary"
-            {...register("message")}
-            aria-invalid={!!errors.message}
-            aria-describedby={errors.message ? "message-error" : undefined}
-          />
-          {errors.message && (
-            <p id="message-error" className="mt-1 text-sm text-error">
-              {errors.message.message}
+        {isVolunteerInterest ? (
+          <div className="rounded-lg border border-outline-variant bg-surface p-6 text-center">
+            <p className="mb-4 text-on-surface-variant">
+              Volunteering takes a few more details — availability, skills, and certifications — so it has its own
+              quick sign-up form.
             </p>
-          )}
-        </div>
-
-        {siteKey && (
+            <button
+              type="button"
+              onClick={openVolunteerModal}
+              className="btn btn-lg btn-primary w-full"
+            >
+              Continue to Volunteer Sign-up
+            </button>
+          </div>
+        ) : (
           <>
-            <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" strategy="afterInteractive" />
-            <div ref={turnstileContainerRef} />
+            <div>
+              <label htmlFor="message" className="mb-2 block font-medium text-on-surface-variant">
+                MESSAGE
+              </label>
+              <textarea
+                id="message"
+                rows={4}
+                className="w-full rounded-sm border border-outline-variant bg-surface px-4 py-3 outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary"
+                {...register("message")}
+                aria-invalid={!!errors.message}
+                aria-describedby={errors.message ? "message-error" : undefined}
+              />
+              {errors.message && (
+                <p id="message-error" className="mt-1 text-sm text-error">
+                  {errors.message.message}
+                </p>
+              )}
+            </div>
+
+            {siteKey && (
+              <>
+                <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" strategy="afterInteractive" />
+                <div ref={turnstileContainerRef} />
+              </>
+            )}
+
+            {state === "error" && <p className="text-sm text-error">{errorMessage}</p>}
+
+            <button
+              type="submit"
+              disabled={state === "submitting"}
+              className="btn btn-lg btn-primary w-full"
+            >
+              {state === "submitting" ? "Submitting…" : "Submit Inquiry"}
+            </button>
           </>
         )}
-
-        {state === "error" && <p className="text-sm text-error">{errorMessage}</p>}
-
-        <button
-          type="submit"
-          disabled={state === "submitting"}
-          className="btn btn-lg btn-primary w-full"
-        >
-          {state === "submitting" ? "Submitting…" : "Submit Inquiry"}
-        </button>
       </form>
     </div>
   );

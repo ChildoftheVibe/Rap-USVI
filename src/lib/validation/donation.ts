@@ -1,9 +1,6 @@
 import { z } from "zod";
 import { MIN_DONATION_CENTS, MAX_DONATION_CENTS } from "@/lib/donations";
 
-// No turnstileToken here — see the comment in
-// src/app/api/donations/create-order/route.ts for why the donation flow
-// deliberately skips Turnstile.
 export const donationCreateSchema = z.object({
   amount: z
     .number()
@@ -15,6 +12,11 @@ export const donationCreateSchema = z.object({
   dedication: z.string().trim().max(500).optional().or(z.literal("")),
   // honeypot: real users never fill this in; must arrive empty
   company: z.string().max(0).optional().or(z.literal("")),
+  // Not enforced with .min() here, matching the other forms: it's a hidden
+  // field, so a schema failure would block submission with no visible error.
+  // The server always re-verifies with Cloudflare, and an empty token fails
+  // that check whenever TURNSTILE_SECRET_KEY is configured.
+  turnstileToken: z.string().default(""),
 });
 
 export type DonationCreateInput = z.infer<typeof donationCreateSchema>;

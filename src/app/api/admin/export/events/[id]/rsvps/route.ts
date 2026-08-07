@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { createServerSupabaseClient, createServiceRoleClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/server";
+import { getAdminUserOrNull } from "@/lib/adminAuth";
 import { toCsv, csvFilename } from "@/lib/csv";
 import type { RsvpStatus } from "@/lib/events";
 
@@ -7,10 +8,7 @@ const RSVP_STATUS_VALUES: RsvpStatus[] = ["confirmed", "waitlisted", "cancelled"
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getAdminUserOrNull();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

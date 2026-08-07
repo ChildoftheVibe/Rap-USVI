@@ -1,8 +1,8 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { createServerSupabaseClient, createServiceRoleClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/server";
+import { requireAdminUser } from "@/lib/adminAuth";
 import { sendCampaignBatches } from "@/lib/campaignEmail";
 
 export interface SendCampaignResult {
@@ -17,13 +17,7 @@ export async function sendCampaign(
   subject: string,
   selectedEmails: string[]
 ): Promise<SendCampaignResult> {
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    redirect("/admin/login");
-  }
+  const user = await requireAdminUser();
 
   const trimmedSubject = subject.trim();
   if (!trimmedSubject) throw new Error("Subject is required");

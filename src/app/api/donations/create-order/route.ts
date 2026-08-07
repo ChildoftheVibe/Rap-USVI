@@ -4,6 +4,7 @@ import { createServiceRoleClient } from "@/lib/supabase/server";
 import { isRateLimited } from "@/lib/ratelimit";
 import { getClientIp, hashIp, isHoneypotTripped } from "@/lib/requestMeta";
 import { createPayPalOrder } from "@/lib/paypal";
+import { verifyTurnstileToken } from "@/lib/turnstile";
 
 export async function POST(request: Request) {
   let body: unknown;
@@ -39,6 +40,15 @@ export async function POST(request: Request) {
   const limited = await isRateLimited(supabase, ipHash, "donations");
   if (limited) {
     return NextResponse.json({ error: "Too many submissions, please try again later" }, { status: 429 });
+  }
+
+  // Turnstile guards this route like every other public write. Without it the
+  // only thing standing between a script and unlimited PayPal order creation
+  // is the IP rate limit above, which fails open on infra errors — too thin a
+  // defense for a route that talks to a payment processor.
+  const turnstileOk = await verifyTurnstileToken(input.turnstileToken, ip);
+  if (!turnstileOk) {
+    return NextResponse.json({ error: "Verification failed" }, { status: 403 });
   }
 
   const { data: row, error: insertError } = await supabase
