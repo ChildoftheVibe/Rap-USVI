@@ -3,7 +3,7 @@ import { volunteerSchema } from "@/lib/validation/volunteer";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { verifyTurnstileToken } from "@/lib/turnstile";
 import { isRateLimited } from "@/lib/ratelimit";
-import { sendVolunteerStaffNotification } from "@/lib/email";
+import { sendVolunteerStaffNotification, sendVolunteerSubmitterAutoReply } from "@/lib/email";
 import { getClientIp, hashIp, isHoneypotTripped } from "@/lib/requestMeta";
 
 export async function POST(request: Request) {
@@ -68,7 +68,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    await sendVolunteerStaffNotification(input);
+    await Promise.all([sendVolunteerStaffNotification(input), sendVolunteerSubmitterAutoReply(input)]);
     await supabase.from("volunteers").update({ notified_at: new Date().toISOString() }).eq("id", row.id);
   } catch (emailError) {
     console.error("Volunteer saved but notification email failed", emailError);

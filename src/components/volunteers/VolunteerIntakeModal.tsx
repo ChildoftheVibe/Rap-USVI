@@ -348,14 +348,20 @@ export function VolunteerIntakeModal() {
         </div>
 
         {state === "success" ? (
-          <div className="p-10 text-center">
+          <div role="status" aria-live="polite" className="p-10 text-center">
             <h3 className="mb-2 font-[family-name:var(--font-headline)] text-xl text-primary">
               Thank you for volunteering!
             </h3>
             <p className="text-on-surface-variant">
-              We&apos;ve received your sign-up and someone from our team will follow up soon.
+              We&apos;ve received your sign-up and a confirmation email is on its way. Someone from our team will
+              follow up soon.
             </p>
-            <button type="button" onClick={close} className="btn btn-primary mt-6">
+            <button
+              type="button"
+              onClick={close}
+              autoFocus
+              className={`btn btn-lg btn-primary mt-6 ${FOCUS_RING}`}
+            >
               Close
             </button>
           </div>

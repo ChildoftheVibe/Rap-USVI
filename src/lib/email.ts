@@ -209,6 +209,30 @@ export async function sendVolunteerStaffNotification(input: VolunteerInput): Pro
   });
 }
 
+export async function sendVolunteerSubmitterAutoReply(input: VolunteerInput): Promise<void> {
+  const resend = getResendClient();
+  const from = process.env.RESEND_FROM_EMAIL;
+  if (!resend || !from) {
+    throw new Error("Resend is not fully configured (RESEND_API_KEY / RESEND_FROM_EMAIL)");
+  }
+
+  const body = `
+    <p style="margin-top:0;">Hi ${escapeHtml(input.fullName)},</p>
+    <p>Thank you for signing up to volunteer with ${site.name}. We've received your information and someone from
+       our team will follow up soon to talk through opportunities that match your availability and interests.</p>
+    <p>In the meantime, feel free to explore our mission and upcoming initiatives at
+       <a href="${site.url}" style="color:${BRAND.primary};">${site.domain}</a>, or reach us directly using the
+       contact details below.</p>
+    <p style="margin-bottom:0;">— ${site.name}</p>`;
+
+  await resend.emails.send({
+    from,
+    to: input.email,
+    subject: `Thanks for signing up to volunteer with ${site.name}`,
+    html: renderEmailShell(body),
+  });
+}
+
 export async function sendSubmitterAutoReply(input: InquiryInput): Promise<void> {
   const resend = getResendClient();
   const from = process.env.RESEND_FROM_EMAIL;
