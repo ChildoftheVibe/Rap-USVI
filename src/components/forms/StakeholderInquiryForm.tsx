@@ -114,44 +114,46 @@ export function StakeholderInquiryForm() {
           <input id="company" type="text" tabIndex={-1} autoComplete="off" {...register("company")} />
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          <div>
-            <label htmlFor="fullName" className="mb-2 block font-medium text-on-surface-variant">
-              FULL NAME
-            </label>
-            <input
-              id="fullName"
-              type="text"
-              className="w-full rounded-sm border border-outline-variant bg-surface px-4 py-3 outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary"
-              {...register("fullName")}
-              aria-invalid={!!errors.fullName}
-              aria-describedby={errors.fullName ? "fullName-error" : undefined}
-            />
-            {errors.fullName && (
-              <p id="fullName-error" className="mt-1 text-sm text-error">
-                {errors.fullName.message}
-              </p>
-            )}
+        {!isVolunteerInterest && (
+          <div className="grid gap-6 md:grid-cols-2">
+            <div>
+              <label htmlFor="fullName" className="mb-2 block font-medium text-on-surface-variant">
+                FULL NAME
+              </label>
+              <input
+                id="fullName"
+                type="text"
+                className="w-full rounded-sm border border-outline-variant bg-surface px-4 py-3 outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary"
+                {...register("fullName")}
+                aria-invalid={!!errors.fullName}
+                aria-describedby={errors.fullName ? "fullName-error" : undefined}
+              />
+              {errors.fullName && (
+                <p id="fullName-error" className="mt-1 text-sm text-error">
+                  {errors.fullName.message}
+                </p>
+              )}
+            </div>
+            <div>
+              <label htmlFor="email" className="mb-2 block font-medium text-on-surface-variant">
+                EMAIL ADDRESS
+              </label>
+              <input
+                id="email"
+                type="email"
+                className="w-full rounded-sm border border-outline-variant bg-surface px-4 py-3 outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary"
+                {...register("email")}
+                aria-invalid={!!errors.email}
+                aria-describedby={errors.email ? "email-error" : undefined}
+              />
+              {errors.email && (
+                <p id="email-error" className="mt-1 text-sm text-error">
+                  {errors.email.message}
+                </p>
+              )}
+            </div>
           </div>
-          <div>
-            <label htmlFor="email" className="mb-2 block font-medium text-on-surface-variant">
-              EMAIL ADDRESS
-            </label>
-            <input
-              id="email"
-              type="email"
-              className="w-full rounded-sm border border-outline-variant bg-surface px-4 py-3 outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary"
-              {...register("email")}
-              aria-invalid={!!errors.email}
-              aria-describedby={errors.email ? "email-error" : undefined}
-            />
-            {errors.email && (
-              <p id="email-error" className="mt-1 text-sm text-error">
-                {errors.email.message}
-              </p>
-            )}
-          </div>
-        </div>
+        )}
 
         <div>
           <label htmlFor="interestArea" className="mb-2 block font-medium text-on-surface-variant">

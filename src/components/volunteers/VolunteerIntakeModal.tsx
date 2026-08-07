@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type TouchEvent as ReactTouchEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type TouchEvent as ReactTouchEvent } from "react";
 import Script from "next/script";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,7 +11,7 @@ import {
   commitmentLevels,
   certificationOptions,
 } from "@/lib/content";
-import { useTurnstile } from "@/lib/useTurnstile";
+import "@/lib/useTurnstile"; // pulls in the ambient `window.turnstile` type augmentation
 
 const OPEN_EVENT = "rap:open-volunteer-modal";
 const FOCUS_RING =
@@ -96,10 +96,58 @@ export function VolunteerIntakeModal() {
     },
   });
 
-  const turnstileContainerRef = useTurnstile(siteKey, (token) => {
-    setTurnstileToken(token);
-    setValue("turnstileToken", token);
-  });
+  const turnstileWidgetIdRef = useRef<string | null>(null);
+  const turnstilePollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Cloudflare Turnstile can't size or run its check inside a `display:none`
+  // container, so this widget is only ever rendered while its container is
+  // actually mounted (the review step) — not just visually hidden. A
+  // callback ref (rather than useEffect + a stable useRef) fires exactly
+  // when that container enters/leaves the DOM as the user swipes between
+  // steps, so the widget is (re-)rendered fresh each time it becomes visible.
+  const turnstileContainerRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (turnstilePollRef.current) {
+        clearInterval(turnstilePollRef.current);
+        turnstilePollRef.current = null;
+      }
+
+      if (!node) {
+        if (turnstileWidgetIdRef.current && window.turnstile) {
+          window.turnstile.remove(turnstileWidgetIdRef.current);
+        }
+        turnstileWidgetIdRef.current = null;
+        return;
+      }
+
+      if (!siteKey) return;
+
+      function renderWidget() {
+        if (!node || !window.turnstile) return;
+        turnstileWidgetIdRef.current = window.turnstile.render(node, {
+          sitekey: siteKey!,
+          callback: (token: string) => {
+            setTurnstileToken(token);
+            setValue("turnstileToken", token);
+          },
+        });
+      }
+
+      if (window.turnstile) {
+        renderWidget();
+      } else {
+        turnstilePollRef.current = setInterval(() => {
+          if (window.turnstile) {
+            clearInterval(turnstilePollRef.current!);
+            turnstilePollRef.current = null;
+            renderWidget();
+          }
+        }, 100);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- setValue is stable from react-hook-form
+    [siteKey]
+  );
 
   useEffect(() => {
     function handleOpen() {
@@ -569,11 +617,8 @@ export function VolunteerIntakeModal() {
                 </div>
               )}
 
-              {/* Always mounted (not conditionally rendered) so the ref is
-                  attached before useTurnstile's effect runs; only shown on
-                  the review step, where the actual submit happens. */}
-              {siteKey && (
-                <div className={currentStep.id === "review" ? "pt-4" : "hidden"}>
+              {siteKey && currentStep.id === "review" && (
+                <div className="pt-4">
                   <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" strategy="afterInteractive" />
                   <div ref={turnstileContainerRef} />
                 </div>
