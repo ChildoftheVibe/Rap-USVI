@@ -33,6 +33,9 @@ export function Footer() {
           <Link href="/accessibility" className="decoration-harvest-gold decoration-2 transition-opacity hover:text-white hover:underline">
             Accessibility
           </Link>
+          <Link href="/cookies" className="decoration-harvest-gold decoration-2 transition-opacity hover:text-white hover:underline">
+            Cookie Policy
+          </Link>
         </div>
         <p className="max-w-2xl text-center text-sm text-white/80">
           {site.legalName} is a tax-exempt 501(c)(3) organization. Donations are tax-deductible to
