@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { EB_Garamond, Public_Sans } from "next/font/google";
 import { PostHogProvider } from "@/components/analytics/PostHogProvider";
 import { CookieConsentBanner } from "@/components/analytics/CookieConsentBanner";
+import CrisisSupport from "@/components/layout/CrisisSupport";
 import { site } from "@/lib/content";
 import "./globals.css";
 
@@ -51,6 +52,7 @@ export default function RootLayout({
       </head>
       <body className="overflow-x-hidden bg-surface font-[family-name:var(--font-public-sans)] text-on-surface antialiased">
         {children}
+        <CrisisSupport />
         <PostHogProvider />
         <CookieConsentBanner />
       </body>
