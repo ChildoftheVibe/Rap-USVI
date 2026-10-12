@@ -118,7 +118,6 @@ const CS_STYLES = `
   font-family: var(--font-public-sans), system-ui, sans-serif;
   --cs-primary: var(--color-primary, #0047ab);
   --cs-teal: var(--color-secondary, #006a6a);
-  --cs-teal-light: #2bb3ab;
   --cs-gold: var(--color-harvest-gold, #e5b80b);
   --cs-ink: #191c1d;
 }
@@ -135,7 +134,7 @@ const CS_STYLES = `
   font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.2px;
-  background: linear-gradient(135deg, var(--cs-teal-light) 0%, var(--cs-teal) 55%, var(--cs-primary) 100%);
+  background: var(--cs-primary);
   box-shadow: 0 10px 26px rgba(0,71,171,0.34), 0 2px 6px rgba(0,0,0,0.18);
   opacity: 0;
   transform: translateY(16px);
@@ -147,7 +146,7 @@ const CS_STYLES = `
   position: absolute;
   inset: 0;
   border-radius: 999px;
-  background: var(--cs-teal-light);
+  background: var(--cs-primary);
   z-index: -1;
   animation: cs-breathe 4.2s ease-in-out infinite;
 }
