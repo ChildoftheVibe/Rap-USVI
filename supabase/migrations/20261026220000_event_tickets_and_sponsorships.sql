@@ -236,6 +236,8 @@ set search_path to 'public'
 as $function$
 declare
   v_pay public.donations%rowtype;
+  v_rsvp public.event_rsvps%rowtype;
+  v_remaining integer;
 begin
   select * into v_pay from public.donations where id = p_payment_id for update;
   if not found or v_pay.purpose <> 'ticket' or v_pay.seats_claimed_at is null or v_pay.status = 'completed' then
@@ -244,24 +246,30 @@ begin
 
   if v_pay.rsvp_id is not null then
     perform 1 from public.events where id = v_pay.event_id for update;
-    if exists (
-      select 1 from public.donations
-      where rsvp_id = v_pay.rsvp_id and id <> v_pay.id and seats_claimed_at is not null
-    ) then
-      -- Another purchase with the same email also holds seats on this RSVP:
-      -- only take back this payment's seats.
-      update public.event_rsvps
-        set guest_count = greatest(guest_count - v_pay.quantity, 0),
-            paid_cents = greatest(paid_cents - v_pay.amount_cents, 0)
-        where id = v_pay.rsvp_id;
-    elsif v_pay.rsvp_was_created then
-      delete from public.event_rsvps where id = v_pay.rsvp_id;
-    else
-      update public.event_rsvps
-        set status = coalesce(v_pay.rsvp_prev_status, status),
-            guest_count = coalesce(v_pay.rsvp_prev_guest_count, guest_count),
-            paid_cents = greatest(paid_cents - v_pay.amount_cents, 0)
-        where id = v_pay.rsvp_id;
+    select * into v_rsvp from public.event_rsvps where id = v_pay.rsvp_id for update;
+    if found then
+      -- Take back exactly this payment's seats. Seats added by other
+      -- purchases with the same email stay put.
+      v_remaining := (1 + v_rsvp.guest_count) - v_pay.quantity;
+      if v_remaining > 0 then
+        update public.event_rsvps
+          set guest_count = v_remaining - 1,
+              paid_cents = greatest(paid_cents - v_pay.amount_cents, 0)
+          where id = v_rsvp.id;
+      elsif v_pay.rsvp_was_created and not exists (
+        select 1 from public.donations where rsvp_id = v_rsvp.id and id <> v_pay.id
+      ) then
+        delete from public.event_rsvps where id = v_rsvp.id;
+      else
+        -- No seats left from this payment: put the RSVP back the way it was
+        -- before (for example, cancelled), so a declined card never leaves a free seat.
+        update public.event_rsvps
+          set status = case when v_pay.rsvp_was_created then 'cancelled'
+                            else coalesce(v_pay.rsvp_prev_status, 'cancelled') end,
+              guest_count = coalesce(v_pay.rsvp_prev_guest_count, 0),
+              paid_cents = greatest(paid_cents - v_pay.amount_cents, 0)
+          where id = v_rsvp.id;
+      end if;
     end if;
   end if;
 
