@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { DonationRow } from "@/lib/donations";
-import type { EventRow, EventRsvpRow } from "@/lib/events";
+import type { EventRow } from "@/lib/events";
 import type { SponsorTier } from "@/lib/validation/event";
 import {
   notifyStaffOfEventPayment,
@@ -19,6 +19,13 @@ export const SEAT_CLAIM_ERRORS: Record<string, { status: number; message: string
   event_not_open: { status: 400, message: "Ticket sales are closed for this event. You have not been charged." },
   rsvp_disabled: { status: 400, message: "Ticket sales are closed for this event. You have not been charged." },
   event_not_found: { status: 404, message: "This event could not be found. You have not been charged." },
+  checkout_in_progress: {
+    status: 409,
+    message: "Another checkout for this email is still finishing. Please wait a minute and try again. You have not been charged.",
+  },
+  sponsor_sold_out: { status: 409, message: "That sponsor level just filled up. You have not been charged." },
+  tier_not_found: { status: 400, message: "That sponsor level is no longer offered. You have not been charged." },
+  payment_not_pending: { status: 409, message: "This checkout has expired. Please start again. You have not been charged." },
 };
 
 export function isEventEnded(event: Pick<EventRow, "end_at">): boolean {
@@ -161,19 +168,50 @@ export async function completeEventPayment(
   return finalRow;
 }
 
-/** Calls claim_ticket_seats(); returns the RSVP or the database's error code. */
-export async function claimTicketSeats(
+/**
+ * Holds what the buyer is paying for, under a database lock: seats for a
+ * ticket (claim_ticket_seats) or one slot of a limited sponsor level
+ * (claim_sponsor_slot). Returns the database's error code if it can't.
+ * Safe to call twice for the same payment.
+ */
+export async function claimCheckoutHold(
   supabase: SupabaseClient,
-  paymentId: string
-): Promise<{ rsvp: EventRsvpRow | null; errorCode: string | null }> {
-  const { data, error } = await supabase.rpc("claim_ticket_seats", { p_payment_id: paymentId });
-  if (error || !data) {
-    return { rsvp: null, errorCode: error?.message ?? "unknown" };
-  }
-  return { rsvp: data as EventRsvpRow, errorCode: null };
+  row: Pick<DonationRow, "id" | "purpose">
+): Promise<{ errorCode: string | null }> {
+  const fn = row.purpose === "ticket" ? "claim_ticket_seats" : "claim_sponsor_slot";
+  const { error } = await supabase.rpc(fn, { p_payment_id: row.id });
+  return { errorCode: error ? error.message || "unknown" : null };
 }
 
-export async function releaseTicketSeats(supabase: SupabaseClient, paymentId: string): Promise<void> {
-  const { error } = await supabase.rpc("release_ticket_seats", { p_payment_id: paymentId });
-  if (error) console.error("Failed to release ticket seats", { paymentId, error });
+/** Gives seats or a sponsor slot back. Only call when PayPal definitely did not take the money. */
+export async function releaseCheckoutHold(supabase: SupabaseClient, paymentId: string): Promise<void> {
+  const { error } = await supabase.rpc("release_checkout_hold", { p_payment_id: paymentId });
+  if (error) console.error("Failed to release checkout hold", { paymentId, error });
+}
+
+/** Flags a payment for staff and emails them, for cases a person needs to look at in PayPal. */
+export async function flagPaymentForStaff(
+  supabase: SupabaseClient,
+  row: DonationRow,
+  event: EventRow,
+  attention: string
+): Promise<void> {
+  await supabase.from("donations").update({ attention }).eq("id", row.id);
+  try {
+    await notifyStaffOfEventPayment({
+      event,
+      kind: row.purpose === "ticket" ? "ticket" : "sponsorship",
+      name: row.donor_name || "Unknown buyer",
+      email: row.donor_email || "No email on file",
+      organization: row.organization,
+      tierName: row.sponsor_tier_name,
+      quantity: row.quantity,
+      amountCents: row.amount_cents,
+      captureId: row.paypal_order_id ? `Order ${row.paypal_order_id}` : "Unknown",
+      attention,
+      subjectPrefix: "Check this payment",
+    });
+  } catch (err) {
+    console.error("Failed to alert staff about payment", err);
+  }
 }

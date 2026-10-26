@@ -4,7 +4,7 @@ import { verifyPayPalWebhookSignature } from "@/lib/paypal";
 import { sendDonationReceiptEmail } from "@/lib/donationEmail";
 import type { DonationRow } from "@/lib/donations";
 import type { EventRow } from "@/lib/events";
-import { claimTicketSeats, completeEventPayment, releaseTicketSeats } from "@/lib/eventCheckout";
+import { claimCheckoutHold, completeEventPayment, releaseCheckoutHold } from "@/lib/eventCheckout";
 
 interface PayPalCaptureResource {
   id: string;
@@ -165,7 +165,9 @@ async function handleEventPaymentWebhook(
 
   switch (event.event_type) {
     case "PAYMENT.CAPTURE.COMPLETED": {
-      if (row.status !== "pending" || !row.event_id) break;
+      // Also accept rows our capture route marked failed: if PayPal says the
+      // money moved, the buyer paid and must get their seats or a flag for staff.
+      if (row.status === "completed" || row.status === "refunded" || !row.event_id) break;
 
       const capturedCents = resource.amount ? Math.round(parseFloat(resource.amount.value) * 100) : null;
       if (capturedCents !== row.amount_cents || resource.amount?.currency_code !== row.currency) {
@@ -181,18 +183,22 @@ async function handleEventPaymentWebhook(
             attention: "PayPal reported a different amount than expected. Check this payment in PayPal.",
           })
           .eq("id", row.id)
-          .eq("status", "pending");
+          .neq("status", "completed");
         break;
       }
 
       const { data: eventRow } = await supabase.from("events").select("*").eq("id", row.event_id).maybeSingle();
       if (!eventRow) break;
 
+      if (row.status === "failed") {
+        await supabase.from("donations").update({ status: "pending" }).eq("id", row.id).eq("status", "failed");
+      }
+
       let attention: string | null = null;
-      if (row.purpose === "ticket" && !row.seats_claimed_at) {
-        const { errorCode } = await claimTicketSeats(supabase, row.id);
+      if (!row.seats_claimed_at) {
+        const { errorCode } = await claimCheckoutHold(supabase, row);
         if (errorCode) {
-          attention = `Paid, but seats could not be held (${errorCode}). Contact the buyer or refund in PayPal.`;
+          attention = `Paid, but the ${row.purpose === "ticket" ? "seats" : "sponsor slot"} could not be held (${errorCode}). Contact the buyer or refund in PayPal.`;
         }
       }
 
@@ -208,7 +214,7 @@ async function handleEventPaymentWebhook(
     }
     case "PAYMENT.CAPTURE.DENIED": {
       if (row.status !== "completed") {
-        if (row.purpose === "ticket") await releaseTicketSeats(supabase, row.id);
+        await releaseCheckoutHold(supabase, row.id);
         await supabase.from("donations").update({ status: "failed" }).eq("id", row.id);
       }
       break;

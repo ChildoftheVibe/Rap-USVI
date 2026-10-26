@@ -119,6 +119,28 @@ interface CaptureResult {
   };
 }
 
+export interface PayPalOrderDetails {
+  id: string;
+  /** CREATED, SAVED, APPROVED, VOIDED, COMPLETED, or PAYER_ACTION_REQUIRED */
+  status: string;
+  purchase_units: {
+    amount: { value: string; currency_code: string };
+    payments?: {
+      captures?: {
+        id: string;
+        status: string;
+        amount: { value: string; currency_code: string };
+      }[];
+    };
+  }[];
+  payer?: CaptureResult["payer"];
+}
+
+/** Reads an order's current state from PayPal. Used to confirm approval before holding seats, and to settle unclear capture results. */
+export async function getPayPalOrder(orderId: string): Promise<PayPalOrderDetails> {
+  return paypalFetch<PayPalOrderDetails>(`/v2/checkout/orders/${encodeURIComponent(orderId)}`, { method: "GET" });
+}
+
 export async function capturePayPalOrder(orderId: string): Promise<CaptureResult> {
   return paypalFetch<CaptureResult>(`/v2/checkout/orders/${orderId}/capture`, {
     method: "POST",

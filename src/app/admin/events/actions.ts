@@ -53,12 +53,18 @@ function parseOrThrow(input: EventInput) {
  * stay attached to their level even if the level is renamed.
  */
 function toSponsorTiers(inputs: SponsorTierInput[]): SponsorTier[] {
-  const used = new Set<string>();
+  // Levels that already have a key keep it, and claim it before any new
+  // level picks one, so a new level can never take over an old level's sales.
+  const used = new Set(inputs.map((tier) => tier.key).filter((key): key is string => !!key));
   return inputs.map((tier) => {
-    let key = tier.key || slugify(tier.name).slice(0, 50);
-    let suffix = 2;
-    while (used.has(key)) key = `${slugify(tier.name).slice(0, 50)}-${suffix++}`;
-    used.add(key);
+    let key = tier.key || "";
+    if (!key) {
+      const base = slugify(tier.name).slice(0, 50) || "level";
+      key = base;
+      let suffix = 2;
+      while (used.has(key)) key = `${base}-${suffix++}`;
+      used.add(key);
+    }
     return {
       key,
       name: tier.name,

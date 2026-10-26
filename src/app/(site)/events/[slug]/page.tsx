@@ -7,6 +7,7 @@ import type { EventRow, EventMediaRow } from "@/lib/events";
 import { EventRsvpForm } from "@/components/forms/EventRsvpForm";
 import { TicketCheckout } from "@/components/events/TicketCheckout";
 import { SponsorSection, type SponsorTierView } from "@/components/events/SponsorSection";
+import { EventPayPalProvider } from "@/components/events/EventPayPalProvider";
 import { getSponsorTierSales } from "@/lib/eventCheckout";
 import { sanitizeStoredDescription } from "@/lib/sanitizeHtml";
 import { site } from "@/lib/content";
@@ -98,6 +99,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         </div>
       </div>
 
+      <EventPayPalProvider>
       <div className="mx-auto grid max-w-container-max grid-cols-1 gap-12 px-margin-mobile py-16 md:px-margin-desktop lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           <div className="flex flex-wrap items-center gap-3 text-caribbean-azure">
@@ -140,14 +142,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           <a href={`/api/events/${event.slug}/ics`} className="btn btn-md btn-outline w-full sm:w-max">
             Add to Calendar
           </a>
-          {sponsorTierViews.length > 0 && (
-            <SponsorSection
-              slug={event.slug}
-              eventTitle={event.title}
-              tiers={sponsorTierViews}
-              salesOpen={!isPast}
-            />
-          )}
         </div>
 
         <div id="rsvp">
@@ -180,6 +174,19 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           )}
         </div>
       </div>
+      {sponsorTierViews.length > 0 && (
+        <div className="mx-auto max-w-container-max px-margin-mobile pb-16 md:px-margin-desktop">
+          <div className="lg:w-2/3">
+            <SponsorSection
+              slug={event.slug}
+              eventTitle={event.title}
+              tiers={sponsorTierViews}
+              salesOpen={!isPast}
+            />
+          </div>
+        </div>
+      )}
+      </EventPayPalProvider>
     </article>
   );
 }

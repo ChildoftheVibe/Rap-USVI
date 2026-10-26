@@ -145,6 +145,8 @@ interface StaffPaymentParams {
   amountCents: number;
   captureId: string;
   attention?: string | null;
+  /** Replaces "Ticket sale" / "New sponsor" in the subject, for alerts. */
+  subjectPrefix?: string;
 }
 
 export async function notifyStaffOfEventPayment(params: StaffPaymentParams): Promise<void> {
@@ -159,7 +161,7 @@ export async function notifyStaffOfEventPayment(params: StaffPaymentParams): Pro
       : `${params.tierName ?? "Sponsorship"} sponsorship`;
 
   const body = `
-    <p style="margin-top:0;"><strong>${escapeHtml(params.name)}</strong> paid ${formatUsd(params.amountCents)} for
+    <p style="margin-top:0;"><strong>${escapeHtml(params.name)}</strong> ${params.subjectPrefix ? "started a payment of" : "paid"} ${formatUsd(params.amountCents)} for
        ${escapeHtml(what)} at <strong>${escapeHtml(params.event.title)}</strong>.</p>
     <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%; margin:16px 0;">
       ${params.organization ? renderField("Organization", escapeHtml(params.organization)) : ""}
@@ -175,7 +177,7 @@ export async function notifyStaffOfEventPayment(params: StaffPaymentParams): Pro
   await resend.emails.send({
     from,
     to: staffTo,
-    subject: `${params.kind === "ticket" ? "Ticket sale" : "New sponsor"}: ${formatUsd(params.amountCents)} for ${params.event.title}`,
+    subject: `${params.subjectPrefix ?? (params.kind === "ticket" ? "Ticket sale" : "New sponsor")}: ${formatUsd(params.amountCents)} for ${params.event.title}`,
     html: renderEmailShell(body),
   });
 }
