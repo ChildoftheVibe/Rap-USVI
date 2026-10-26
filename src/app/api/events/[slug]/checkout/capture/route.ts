@@ -7,16 +7,13 @@ import type { EventRow } from "@/lib/events";
 import {
   SEAT_CLAIM_ERRORS,
   claimCheckoutHold,
-  completeEventPayment,
+  firstCapture,
   flagPaymentForStaff,
+  isDefiniteRefusal,
   releaseCheckoutHold,
+  settleCapture,
+  type CaptureLike,
 } from "@/lib/eventCheckout";
-
-type CaptureLike = {
-  id: string;
-  status: string;
-  amount: { value: string; currency_code: string };
-};
 
 const PROCESSING_MESSAGE =
   "PayPal is still finishing your payment. You'll get a confirmation email as soon as it clears. Please don't pay again.";
@@ -29,26 +26,6 @@ function successBody(row: DonationRow) {
     quantity: row.quantity,
     tierName: row.sponsor_tier_name,
     email: row.donor_email,
-  };
-}
-
-function toCents(value: string): number {
-  return Math.round(parseFloat(value) * 100);
-}
-
-function firstCapture(order: {
-  purchase_units: { payments?: { captures?: CaptureLike[] } }[];
-}): CaptureLike | undefined {
-  return order.purchase_units[0]?.payments?.captures?.[0];
-}
-
-function payerOf(order: Pick<PayPalOrderDetails, "payer">) {
-  return {
-    payerId: order.payer?.payer_id ?? null,
-    payerEmail: order.payer?.email_address ?? null,
-    payerName: order.payer?.name
-      ? [order.payer.name.given_name, order.payer.name.surname].filter(Boolean).join(" ")
-      : null,
   };
 }
 
@@ -65,7 +42,8 @@ async function markFailed(supabase: ReturnType<typeof createServiceRoleClient>, 
  *  3. Take the money.
  * Holds are only given back when PayPal definitely did not take the money.
  * When the result is unclear (a timeout, a payment under review), the hold
- * stays, staff are alerted, and the PayPal webhook finishes the job.
+ * stays, staff are alerted, and the PayPal webhook or the stale-hold sweep
+ * (settleStaleHolds) finishes the job.
  */
 export async function POST(request: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -123,7 +101,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
   }
 
   const orderAmount = order.purchase_units[0]?.amount;
-  if (!orderAmount || orderAmount.currency_code !== row.currency || toCents(orderAmount.value) !== row.amount_cents) {
+  if (
+    !orderAmount ||
+    orderAmount.currency_code !== row.currency ||
+    Math.round(parseFloat(orderAmount.value) * 100) !== row.amount_cents
+  ) {
     console.error("PayPal order amount does not match the saved payment", { paymentId: row.id, orderAmount });
     await markFailed(supabase, row.id);
     return NextResponse.json({ error: "Payment verification failed. You have not been charged." }, { status: 400 });
@@ -131,7 +113,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
 
   // Already captured (for example, our earlier response got lost): just finish up.
   if (order.status === "COMPLETED") {
-    return finishCaptured(supabase, row, event, order, firstCapture(order));
+    return respond(await settleCapture(supabase, row, event, order, firstCapture(order)));
   }
 
   if (order.status !== "APPROVED") {
@@ -160,9 +142,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
   try {
     captureResult = await capturePayPalOrder(orderId);
   } catch (err) {
-    const { status, issue } = err as { status?: number; issue?: string };
-
-    if (issue === "INSTRUMENT_DECLINED") {
+    if ((err as { issue?: string }).issue === "INSTRUMENT_DECLINED") {
       // The buyer picks another card and PayPal calls us again; the next call re-holds.
       await releaseCheckoutHold(supabase, row.id);
       return NextResponse.json({ error: "INSTRUMENT_DECLINED" }, { status: 409 });
@@ -177,89 +157,42 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
     }
 
     if (after?.status === "COMPLETED") {
-      return finishCaptured(supabase, row, event, after, firstCapture(after));
+      return respond(await settleCapture(supabase, row, event, after, firstCapture(after)));
     }
 
-    const definitelyRefused = !!after && typeof status === "number" && status >= 400 && status < 500 && status !== 429;
-    if (definitelyRefused) {
-      console.error("PayPal refused the capture", { paymentId: row.id, status, issue });
+    if (after && isDefiniteRefusal(err)) {
+      console.error("PayPal refused the capture", { paymentId: row.id, err });
       await releaseCheckoutHold(supabase, row.id);
       await markFailed(supabase, row.id);
       return NextResponse.json({ error: "Payment could not be completed. You have not been charged." }, { status: 402 });
     }
 
-    console.error("PayPal capture outcome unknown; holding seats for the webhook", { paymentId: row.id, err });
+    console.error("PayPal capture outcome unknown; holding seats", { paymentId: row.id, err });
     await flagPaymentForStaff(
       supabase,
       row,
       event,
-      "PayPal didn't confirm this capture in time. Seats are held. The PayPal webhook should finish it; if it hasn't within an hour, check the order in PayPal."
+      "PayPal didn't confirm this capture in time. Seats are held. The site will recheck with PayPal automatically within the hour."
     );
     return NextResponse.json({ processing: true, message: PROCESSING_MESSAGE }, { status: 202 });
   }
 
-  return finishCaptured(supabase, row, event, captureResult, firstCapture(captureResult));
+  const capture: CaptureLike | undefined = firstCapture(captureResult);
+  return respond(await settleCapture(supabase, row, event, captureResult, capture));
 }
 
-async function finishCaptured(
-  supabase: ReturnType<typeof createServiceRoleClient>,
-  row: DonationRow,
-  event: EventRow,
-  order: Pick<PayPalOrderDetails, "payer">,
-  capture: CaptureLike | undefined
-) {
-  if (!capture || toCents(capture.amount.value) !== row.amount_cents) {
-    console.error("PayPal capture amount mismatch for event payment", { paymentId: row.id, capture });
-    await flagPaymentForStaff(
-      supabase,
-      row,
-      event,
-      "PayPal's captured amount didn't match the expected price. Seats are held. Check this payment in PayPal."
-    );
-    return NextResponse.json(
-      { error: "We couldn't confirm your payment. Our team has been alerted and will contact you." },
-      { status: 500 }
-    );
+function respond(outcome: Awaited<ReturnType<typeof settleCapture>>) {
+  switch (outcome.kind) {
+    case "completed":
+      return NextResponse.json(successBody(outcome.row));
+    case "processing":
+      return NextResponse.json({ processing: true, message: PROCESSING_MESSAGE }, { status: 202 });
+    case "refused":
+      return NextResponse.json({ error: "Payment could not be completed. You have not been charged." }, { status: 402 });
+    case "mismatch":
+      return NextResponse.json(
+        { error: "We couldn't confirm your payment. Our team has been alerted and will contact you." },
+        { status: 500 }
+      );
   }
-
-  if (capture.status === "PENDING") {
-    // PayPal is reviewing the payment. Keep the hold; the webhook finishes it when it clears.
-    await flagPaymentForStaff(
-      supabase,
-      row,
-      event,
-      "PayPal is holding this payment for review. Seats are held until it clears or is denied."
-    );
-    return NextResponse.json({ processing: true, message: PROCESSING_MESSAGE }, { status: 202 });
-  }
-
-  if (capture.status !== "COMPLETED") {
-    // DECLINED or FAILED: no money moved.
-    await releaseCheckoutHold(supabase, row.id);
-    await markFailed(supabase, row.id);
-    return NextResponse.json({ error: "Payment could not be completed. You have not been charged." }, { status: 402 });
-  }
-
-  // If the hold was never placed (the order was captured on an earlier call
-  // that didn't finish), place it now. The money is in, so a failure here is
-  // flagged for staff rather than refused.
-  let attention: string | null = null;
-  const { data: current } = await supabase.from("donations").select("*").eq("id", row.id).single();
-  if (current && !(current as DonationRow).seats_claimed_at) {
-    const { errorCode } = await claimCheckoutHold(supabase, current as DonationRow);
-    if (errorCode) {
-      attention = `Paid, but the ${row.purpose === "ticket" ? "seats" : "sponsor slot"} could not be held (${errorCode}). Contact the buyer or refund in PayPal.`;
-    }
-  }
-
-  const { data: freshRow } = await supabase.from("donations").select("*").eq("id", row.id).single();
-  const finalRow = await completeEventPayment(
-    supabase,
-    (freshRow ?? row) as DonationRow,
-    event,
-    { captureId: capture.id, ...payerOf(order) },
-    attention
-  );
-
-  return NextResponse.json(successBody(finalRow));
 }

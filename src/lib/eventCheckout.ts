@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { DonationRow } from "@/lib/donations";
 import type { EventRow } from "@/lib/events";
 import type { SponsorTier } from "@/lib/validation/event";
+import { capturePayPalOrder, getPayPalOrder } from "@/lib/paypal";
 import {
   notifyStaffOfEventPayment,
   sendSponsorshipReceiptEmail,
@@ -213,5 +214,186 @@ export async function flagPaymentForStaff(
     });
   } catch (err) {
     console.error("Failed to alert staff about payment", err);
+  }
+}
+
+export interface CaptureLike {
+  id: string;
+  status: string;
+  amount: { value: string; currency_code: string };
+}
+
+interface PayerLike {
+  payer?: {
+    payer_id?: string;
+    email_address?: string;
+    name?: { given_name?: string; surname?: string };
+  };
+}
+
+export function firstCapture(order: {
+  purchase_units: { payments?: { captures?: CaptureLike[] } }[];
+}): CaptureLike | undefined {
+  return order.purchase_units[0]?.payments?.captures?.[0];
+}
+
+function payerOf(order: PayerLike) {
+  return {
+    payerId: order.payer?.payer_id ?? null,
+    payerEmail: order.payer?.email_address ?? null,
+    payerName: order.payer?.name
+      ? [order.payer.name.given_name, order.payer.name.surname].filter(Boolean).join(" ")
+      : null,
+  };
+}
+
+export type SettleOutcome =
+  | { kind: "completed"; row: DonationRow }
+  | { kind: "processing" }
+  | { kind: "refused" }
+  | { kind: "mismatch" };
+
+/**
+ * Decides what happens once PayPal has answered a capture: complete it, wait
+ * on a payment under review, give the hold back after a refusal, or flag an
+ * amount mismatch for staff. Shared by the capture route and the stale-hold sweep.
+ */
+export async function settleCapture(
+  supabase: SupabaseClient,
+  row: DonationRow,
+  event: EventRow,
+  order: PayerLike,
+  capture: CaptureLike | undefined
+): Promise<SettleOutcome> {
+  const cents = capture ? Math.round(parseFloat(capture.amount.value) * 100) : null;
+  if (!capture || cents !== row.amount_cents) {
+    console.error("PayPal capture amount mismatch for event payment", { paymentId: row.id, capture });
+    await flagPaymentForStaff(
+      supabase,
+      row,
+      event,
+      "PayPal's captured amount didn't match the expected price. Seats are held. Check this payment in PayPal."
+    );
+    return { kind: "mismatch" };
+  }
+
+  if (capture.status === "PENDING") {
+    if (!row.attention) {
+      await flagPaymentForStaff(
+        supabase,
+        row,
+        event,
+        "PayPal is holding this payment for review. Seats are held until it clears or is denied."
+      );
+    }
+    return { kind: "processing" };
+  }
+
+  if (capture.status !== "COMPLETED") {
+    await releaseCheckoutHold(supabase, row.id);
+    await supabase.from("donations").update({ status: "failed" }).eq("id", row.id).eq("status", "pending");
+    return { kind: "refused" };
+  }
+
+  // The money is in. If an overlapping request marked this row failed, undo that first.
+  await supabase.from("donations").update({ status: "pending" }).eq("id", row.id).eq("status", "failed");
+
+  let attention: string | null = null;
+  const { data: current } = await supabase.from("donations").select("*").eq("id", row.id).single();
+  if (current && !(current as DonationRow).seats_claimed_at) {
+    const { errorCode } = await claimCheckoutHold(supabase, current as DonationRow);
+    if (errorCode) {
+      attention = `Paid, but the ${row.purpose === "ticket" ? "seats" : "sponsor slot"} could not be held (${errorCode}). Contact the buyer or refund in PayPal.`;
+    }
+  }
+
+  const { data: fresh } = await supabase.from("donations").select("*").eq("id", row.id).single();
+  const finalRow = await completeEventPayment(
+    supabase,
+    (fresh ?? current ?? row) as DonationRow,
+    event,
+    { captureId: capture.id, ...payerOf(order) },
+    attention
+  );
+  return { kind: "completed", row: finalRow };
+}
+
+/**
+ * PayPal errors that mean "this capture did not and will not happen". Duplicate
+ * or in-progress answers (409, PREVIOUS_REQUEST_IN_PROGRESS) are not on this
+ * list: another request may be capturing the same order right now.
+ */
+export function isDefiniteRefusal(err: unknown): boolean {
+  const { status, issue } = (err ?? {}) as { status?: number; issue?: string };
+  if (typeof status !== "number" || status < 400 || status >= 500) return false;
+  if (status === 409 || status === 429) return false;
+  if (issue === "PREVIOUS_REQUEST_IN_PROGRESS" || issue === "DUPLICATE_REQUEST_ID") return false;
+  return true;
+}
+
+const STALE_HOLD_MINUTES = 60;
+
+/**
+ * Settles holds left behind when PayPal never gave a clear answer (a timeout
+ * with no webhook afterward). Runs automatically when someone starts a
+ * checkout for the event and when staff open its RSVP list, so held seats
+ * can't stay stuck. Each stale row is checked with PayPal: finished if paid,
+ * captured if still approved, released if the order is dead.
+ */
+export async function settleStaleHolds(supabase: SupabaseClient, eventId: string): Promise<void> {
+  const cutoff = new Date(Date.now() - STALE_HOLD_MINUTES * 60_000).toISOString();
+
+  const { data: rows } = await supabase
+    .from("donations")
+    .select("*")
+    .eq("event_id", eventId)
+    .in("purpose", ["ticket", "sponsorship"])
+    .eq("status", "pending")
+    .not("seats_claimed_at", "is", null)
+    .not("paypal_order_id", "is", null)
+    .lt("seats_claimed_at", cutoff)
+    .order("seats_claimed_at", { ascending: true })
+    .limit(5);
+  if (!rows?.length) return;
+
+  const { data: eventData } = await supabase.from("events").select("*").eq("id", eventId).maybeSingle();
+  if (!eventData) return;
+  const event = eventData as EventRow;
+
+  for (const raw of rows) {
+    const row = raw as DonationRow;
+    try {
+      let order;
+      try {
+        order = await getPayPalOrder(row.paypal_order_id!);
+      } catch (err) {
+        if ((err as { status?: number }).status === 404) {
+          // PayPal deletes orders that were never paid after a while.
+          await releaseCheckoutHold(supabase, row.id);
+          await supabase.from("donations").update({ status: "failed" }).eq("id", row.id).eq("status", "pending");
+        }
+        continue;
+      }
+
+      if (order.status === "COMPLETED") {
+        await settleCapture(supabase, row, event, order, firstCapture(order));
+      } else if (order.status === "APPROVED") {
+        try {
+          const captured = await capturePayPalOrder(row.paypal_order_id!);
+          await settleCapture(supabase, row, event, captured, firstCapture(captured));
+        } catch (err) {
+          if ((err as { issue?: string }).issue === "INSTRUMENT_DECLINED" || isDefiniteRefusal(err)) {
+            await releaseCheckoutHold(supabase, row.id);
+            await supabase.from("donations").update({ status: "failed" }).eq("id", row.id).eq("status", "pending");
+          }
+        }
+      } else {
+        // VOIDED, CREATED, PAYER_ACTION_REQUIRED: no money will move on this order.
+        await releaseCheckoutHold(supabase, row.id);
+        await supabase.from("donations").update({ status: "failed" }).eq("id", row.id).eq("status", "pending");
+      }
+    } catch (err) {
+      console.error("Failed to settle stale checkout hold", { paymentId: row.id, err });
+    }
   }
 }

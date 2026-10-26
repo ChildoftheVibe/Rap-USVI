@@ -99,7 +99,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         </div>
       </div>
 
-      <EventPayPalProvider>
+      <EventPayPalProvider enabled={isTicketed || sponsorTierViews.length > 0}>
       <div className="mx-auto grid max-w-container-max grid-cols-1 gap-12 px-margin-mobile py-16 md:px-margin-desktop lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           <div className="flex flex-wrap items-center gap-3 text-caribbean-azure">

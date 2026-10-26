@@ -1,4 +1,5 @@
 import { formatUsd } from "@/lib/donations";
+import { settleStaleHolds } from "@/lib/eventCheckout";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -37,6 +38,13 @@ export default async function EventRsvpsPage({
   const supabase = createServiceRoleClient();
   const { data: event } = await supabase.from("events").select("*").eq("id", id).maybeSingle();
   if (!event) notFound();
+
+  // Settle any paid checkout PayPal never confirmed, so this list is accurate for check in.
+  try {
+    await settleStaleHolds(supabase, id);
+  } catch (err) {
+    console.error("Stale hold sweep failed", err);
+  }
 
   let query = supabase.from("event_rsvps").select("*").eq("event_id", id).order("created_at", { ascending: false });
   if (activeStatus) query = query.eq("status", activeStatus);

@@ -8,7 +8,7 @@ import { createPayPalOrder } from "@/lib/paypal";
 import { computeAvailability, getEventRsvpSummary } from "@/lib/events";
 import type { EventRow } from "@/lib/events";
 import { MAX_DONATION_CENTS, MIN_DONATION_CENTS } from "@/lib/donations";
-import { findSponsorTier, isEventEnded, isSponsorTierSoldOut } from "@/lib/eventCheckout";
+import { findSponsorTier, isEventEnded, isSponsorTierSoldOut, settleStaleHolds } from "@/lib/eventCheckout";
 
 /**
  * Starts a PayPal checkout for event seats or a sponsorship. The amount is
@@ -66,6 +66,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
 
   if (!(await verifyTurnstileToken(input.turnstileToken, ip))) {
     return NextResponse.json({ error: "Verification failed. Please refresh the page and try again." }, { status: 403 });
+  }
+
+  // Free up seats or sponsor slots stuck behind a checkout PayPal never confirmed.
+  try {
+    await settleStaleHolds(supabase, event.id);
+  } catch (err) {
+    console.error("Stale hold sweep failed", err);
   }
 
   const email = input.email.toLowerCase();

@@ -44,6 +44,9 @@ export function EventPayPalCheckout({ slug, getPayload, ready, onSuccess }: Even
   const [turnstileRound, setTurnstileRound] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
   const [notice, setNotice] = useState("");
+  // Set when createOrder already showed a specific reason, so the generic
+  // PayPal onError that follows doesn't overwrite it.
+  const explainedRef = useRef(false);
 
   // The PayPal buttons keep the callbacks they were first rendered with, and
   // re-rendering them (forceReRender) while the PayPal window is open closes
@@ -100,14 +103,17 @@ export function EventPayPalCheckout({ slug, getPayload, ready, onSuccess }: Even
           createOrder={async () => {
             setErrorMessage("");
             setNotice("");
+            explainedRef.current = false;
             const payload = getPayloadRef.current();
             if (!payload) {
               setErrorMessage("Please fill in the form above first.");
+              explainedRef.current = true;
               throw new Error("Form incomplete");
             }
             const token = tokenRef.current;
             if (turnstileSiteKey && !token) {
               setErrorMessage("Please wait for the security check above to finish, then try again.");
+              explainedRef.current = true;
               throw new Error("Turnstile not ready");
             }
             let res: Response;
@@ -124,6 +130,7 @@ export function EventPayPalCheckout({ slug, getPayload, ready, onSuccess }: Even
             const body = await res.json().catch(() => ({}));
             if (!res.ok || !body.orderId) {
               setErrorMessage(body.error ?? "Unable to start checkout. Please try again.");
+              explainedRef.current = true;
               throw new Error(body.error ?? "Failed to create order");
             }
             return body.orderId as string;
@@ -159,6 +166,7 @@ export function EventPayPalCheckout({ slug, getPayload, ready, onSuccess }: Even
             setErrorMessage("Checkout was cancelled. You have not been charged.");
           }}
           onError={() => {
+            if (explainedRef.current) return;
             setErrorMessage("Something went wrong with PayPal checkout. Please try again.");
           }}
         />

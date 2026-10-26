@@ -1,5 +1,6 @@
 "use server";
 
+import { randomBytes } from "node:crypto";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createServiceRoleClient } from "@/lib/supabase/server";
@@ -59,10 +60,12 @@ function toSponsorTiers(inputs: SponsorTierInput[]): SponsorTier[] {
   return inputs.map((tier) => {
     let key = tier.key || "";
     if (!key) {
-      const base = slugify(tier.name).slice(0, 50) || "level";
-      key = base;
-      let suffix = 2;
-      while (used.has(key)) key = `${base}-${suffix++}`;
+      // A random ending means a level deleted and later re-added with the same
+      // name starts fresh instead of inheriting the old level's sales count.
+      const base = slugify(tier.name).slice(0, 45) || "level";
+      do {
+        key = `${base}-${randomBytes(3).toString("hex")}`;
+      } while (used.has(key));
       used.add(key);
     }
     return {

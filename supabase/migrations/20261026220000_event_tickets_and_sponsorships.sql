@@ -179,7 +179,7 @@ begin
 
   if v_has_existing and exists (
     select 1 from public.donations
-    where rsvp_id = v_existing.id and id <> v_pay.id and status = 'pending' and seats_claimed_at is not null
+    where rsvp_id = v_existing.id and id <> v_pay.id and status <> 'completed' and seats_claimed_at is not null
   ) then
     -- One unfinished checkout per RSVP at a time, so holds always unwind in order.
     raise exception 'checkout_in_progress';
