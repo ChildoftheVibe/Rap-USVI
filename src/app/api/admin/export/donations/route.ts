@@ -20,7 +20,7 @@ export async function GET(request: Request) {
   let query = serviceRole
     .from("donations")
     .select(
-      "created_at, donor_name, donor_email, payer_email, amount_cents, currency, status, dedication, paypal_order_id, paypal_capture_id, completed_at, refunded_at"
+      "created_at, purpose, donor_name, donor_email, payer_email, phone, organization, sponsor_tier_name, quantity, amount_cents, currency, status, dedication, attention, paypal_order_id, paypal_capture_id, completed_at, refunded_at, events(title)"
     )
     .order("created_at", { ascending: false });
   if (activeStatus) {
@@ -32,15 +32,27 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Failed to export donations" }, { status: 500 });
   }
 
-  const csv = toCsv(data ?? [], [
+  const rows = (data ?? []).map(({ events, ...rest }) => ({
+    ...rest,
+    event_title: (Array.isArray(events) ? events[0]?.title : (events as { title?: string } | null)?.title) ?? "",
+  }));
+
+  const csv = toCsv(rows, [
     "created_at",
+    "purpose",
+    "event_title",
     "donor_name",
     "donor_email",
     "payer_email",
+    "phone",
+    "organization",
+    "sponsor_tier_name",
+    "quantity",
     "amount_cents",
     "currency",
     "status",
     "dedication",
+    "attention",
     "paypal_order_id",
     "paypal_capture_id",
     "completed_at",

@@ -73,9 +73,12 @@ interface CreateOrderResult {
 export async function createPayPalOrder({
   donationId,
   amountCents,
+  description = "Donation to Restore America's Paradise, Inc.",
 }: {
   donationId: string;
   amountCents: number;
+  /** Shown to the buyer in PayPal. PayPal caps this at 127 characters. */
+  description?: string;
 }): Promise<CreateOrderResult> {
   return paypalFetch<CreateOrderResult>("/v2/checkout/orders", {
     method: "POST",
@@ -86,7 +89,7 @@ export async function createPayPalOrder({
         {
           reference_id: donationId,
           custom_id: donationId,
-          description: "Donation to Restore America's Paradise, Inc.",
+          description: description.slice(0, 127),
           amount: {
             currency_code: "USD",
             value: (amountCents / 100).toFixed(2),

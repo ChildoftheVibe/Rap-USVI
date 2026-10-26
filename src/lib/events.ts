@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { EventStatus, PopupImageSource } from "@/lib/validation/event";
+import type { EventStatus, PopupImageSource, SponsorTier } from "@/lib/validation/event";
 
 /** All events are U.S. Virgin Islands based and never observe DST. */
 export const EVENT_TIMEZONE = "America/St_Thomas";
@@ -41,6 +41,10 @@ export interface EventRow {
   popup_starts_at: string | null;
   popup_ends_at: string | null;
   popup_image_source: PopupImageSource;
+  /** Null means a free RSVP event. When set, seats are sold through PayPal checkout instead. */
+  ticket_price_cents: number | null;
+  ticket_max_per_order: number;
+  sponsor_tiers: SponsorTier[];
 }
 
 export interface EventMediaRow {
@@ -88,6 +92,7 @@ export interface EventRsvpRow {
   notified_at: string | null;
   notify_error: string | null;
   promoted_at: string | null;
+  paid_cents: number;
 }
 
 /** URL-safe slug: lowercase, hyphen-separated, ASCII alphanumerics only. */

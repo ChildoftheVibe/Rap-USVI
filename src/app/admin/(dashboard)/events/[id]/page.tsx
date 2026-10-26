@@ -38,6 +38,9 @@ function toFormInitial(event: EventRow): EventFormInitial {
     popupStartsAt: event.popup_starts_at ? isoToAstLocalInput(event.popup_starts_at) : "",
     popupEndsAt: event.popup_ends_at ? isoToAstLocalInput(event.popup_ends_at) : "",
     popupImageSource: event.popup_image_source,
+    ticketPriceCents: event.ticket_price_cents,
+    ticketMaxPerOrder: event.ticket_max_per_order,
+    sponsorTiers: event.sponsor_tiers ?? [],
   };
 }
 

@@ -5,7 +5,8 @@ import { revalidatePath } from "next/cache";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { requireAdminUser } from "@/lib/adminAuth";
 import { eventSchema, eventStatusValues, type EventInput, type EventStatus } from "@/lib/validation/event";
-import { astLocalInputToIso, type FlyerRatio } from "@/lib/events";
+import { astLocalInputToIso, slugify, type FlyerRatio } from "@/lib/events";
+import type { SponsorTier, SponsorTierInput } from "@/lib/validation/event";
 import { sanitizeEventDescription } from "@/lib/sanitizeHtml";
 import { resolvePendingWaitlistPromotions } from "@/lib/eventEmail";
 import type { RsvpStatus } from "@/lib/events";
@@ -47,6 +48,27 @@ function parseOrThrow(input: EventInput) {
   return parsed.data;
 }
 
+/**
+ * Gives each sponsor level a stable key. Existing keys are kept so sales
+ * stay attached to their level even if the level is renamed.
+ */
+function toSponsorTiers(inputs: SponsorTierInput[]): SponsorTier[] {
+  const used = new Set<string>();
+  return inputs.map((tier) => {
+    let key = tier.key || slugify(tier.name).slice(0, 50);
+    let suffix = 2;
+    while (used.has(key)) key = `${slugify(tier.name).slice(0, 50)}-${suffix++}`;
+    used.add(key);
+    return {
+      key,
+      name: tier.name,
+      amountCents: Math.round(tier.amount * 100),
+      description: tier.description || "",
+      limit: tier.limit ?? null,
+    };
+  });
+}
+
 function toEventRecord(data: EventInput) {
   return {
     title: data.title,
@@ -68,6 +90,9 @@ function toEventRecord(data: EventInput) {
     popup_starts_at: data.popupStartsAt ? astLocalInputToIso(data.popupStartsAt) : null,
     popup_ends_at: data.popupEndsAt ? astLocalInputToIso(data.popupEndsAt) : null,
     popup_image_source: data.popupImageSource,
+    ticket_price_cents: data.ticketPrice == null ? null : Math.round(data.ticketPrice * 100),
+    ticket_max_per_order: data.ticketMaxPerOrder,
+    sponsor_tiers: toSponsorTiers(data.sponsorTiers),
   };
 }
 

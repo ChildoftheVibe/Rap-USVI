@@ -13,6 +13,7 @@ const RPC_ERROR_MESSAGES: Record<string, { status: number; message: string }> = 
   rsvp_disabled: { status: 400, message: "RSVPs are closed for this event." },
   event_ended: { status: 400, message: "This event has already ended." },
   event_full: { status: 409, message: "This event is at full capacity." },
+  ticket_required: { status: 400, message: "This event requires a ticket. Please buy your seat on the event page." },
 };
 
 export async function POST(request: Request, { params }: { params: Promise<{ slug: string }> }) {

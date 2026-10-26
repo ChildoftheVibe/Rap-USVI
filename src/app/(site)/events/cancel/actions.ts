@@ -41,6 +41,15 @@ export async function cancelRsvpByToken(token: string): Promise<CancelRsvpResult
 
   const event = (Array.isArray(rsvp.events) ? rsvp.events[0] : rsvp.events) as EventRow;
 
+  // Paid seats need a refund, which staff handle in PayPal, so they can't be
+  // self-cancelled with a link.
+  if ((rsvp.paid_cents ?? 0) > 0) {
+    return {
+      success: false,
+      message: "This is a paid reservation. Please contact us to cancel and we'll take care of your refund.",
+    };
+  }
+
   const { error } = await supabase.from("event_rsvps").update({ status: "cancelled" }).eq("id", rsvp.id);
   if (error) {
     return { success: false, message: "Something went wrong. Please try again." };

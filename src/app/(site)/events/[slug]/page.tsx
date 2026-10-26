@@ -5,6 +5,9 @@ import { createServiceRoleClient } from "@/lib/supabase/server";
 import { computeAvailability, formatEventDateRange, getEventRsvpSummary } from "@/lib/events";
 import type { EventRow, EventMediaRow } from "@/lib/events";
 import { EventRsvpForm } from "@/components/forms/EventRsvpForm";
+import { TicketCheckout } from "@/components/events/TicketCheckout";
+import { SponsorSection, type SponsorTierView } from "@/components/events/SponsorSection";
+import { getSponsorTierSales } from "@/lib/eventCheckout";
 import { sanitizeStoredDescription } from "@/lib/sanitizeHtml";
 import { site } from "@/lib/content";
 
@@ -58,6 +61,17 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const isPast = new Date(event.end_at) < new Date();
   const rsvpOpen = event.rsvp_enabled && !isPast;
   const media = await getEventMedia(event.id);
+  const isTicketed = event.ticket_price_cents !== null;
+
+  const sponsorTiers = event.sponsor_tiers ?? [];
+  let sponsorTierViews: SponsorTierView[] = [];
+  if (sponsorTiers.length > 0) {
+    const sales = await getSponsorTierSales(supabase, event.id);
+    sponsorTierViews = sponsorTiers.map((tier) => ({
+      ...tier,
+      remaining: tier.limit === null ? null : Math.max(tier.limit - (sales[tier.key] ?? 0), 0),
+    }));
+  }
 
   return (
     <article>
@@ -126,6 +140,14 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           <a href={`/api/events/${event.slug}/ics`} className="btn btn-md btn-outline w-full sm:w-max">
             Add to Calendar
           </a>
+          {sponsorTierViews.length > 0 && (
+            <SponsorSection
+              slug={event.slug}
+              eventTitle={event.title}
+              tiers={sponsorTierViews}
+              salesOpen={!isPast}
+            />
+          )}
         </div>
 
         <div id="rsvp">
@@ -135,8 +157,18 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
             </div>
           ) : !rsvpOpen ? (
             <div className="rounded-lg border border-outline-variant bg-surface-container-lowest p-8 text-center">
-              <p className="text-on-surface-variant">RSVPs are closed for this event.</p>
+              <p className="text-on-surface-variant">
+                {isTicketed ? "Ticket sales are closed for this event." : "RSVPs are closed for this event."}
+              </p>
             </div>
+          ) : isTicketed ? (
+            <TicketCheckout
+              slug={event.slug}
+              priceCents={event.ticket_price_cents!}
+              maxPerOrder={event.ticket_max_per_order}
+              capacity={availability.capacity}
+              spotsLeft={availability.spotsLeft}
+            />
           ) : (
             <EventRsvpForm
               slug={event.slug}
