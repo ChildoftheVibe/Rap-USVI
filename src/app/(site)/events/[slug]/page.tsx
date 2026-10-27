@@ -176,7 +176,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       </div>
       {sponsorTierViews.length > 0 && (
         <div className="mx-auto max-w-container-max px-margin-mobile pb-16 md:px-margin-desktop">
-          <div className="lg:w-2/3">
+          <div>
             <SponsorSection
               slug={event.slug}
               eventTitle={event.title}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { formatUsd } from "@/lib/donations";
 import { sponsorContact } from "@/lib/content";
 import type { SponsorTier } from "@/lib/validation/event";
@@ -25,46 +25,132 @@ const FOCUS_RING =
 const EMAIL_PATTERN = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 const BULLET_PATTERN = /^\s*[·•\-*]\s*/;
-const VISIBLE_BENEFITS = 5;
 
-/** Turns a level's description into an intro paragraph plus a bullet list (lines starting with ·, •, - or *). */
-function TierBenefits({ description }: { description: string }) {
-  const [expanded, setExpanded] = useState(false);
+/** Splits a level's description into intro text and bullet points (lines starting with ·, •, - or *). */
+function parseDescription(description: string) {
   const lines = description
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean);
-  const intro = lines.filter((line) => !BULLET_PATTERN.test(line));
+  const intro = lines.filter((line) => !BULLET_PATTERN.test(line)).join(" ");
   const bullets = lines.filter((line) => BULLET_PATTERN.test(line)).map((line) => line.replace(BULLET_PATTERN, ""));
-  // Only collapse when it hides a meaningful number of items.
-  const collapsible = bullets.length > VISIBLE_BENEFITS + 1;
-  const shown = collapsible && !expanded ? bullets.slice(0, VISIBLE_BENEFITS) : bullets;
+  return { intro, bullets };
+}
+
+/** First sentence of the intro, for the compact card. */
+function tagline(intro: string): string {
+  const match = intro.match(/^.+?[.!?](\s|$)/);
+  return (match ? match[0] : intro).trim();
+}
+
+function seatsLabel(seats: number): string {
+  return `Includes ${seats} ${seats === 1 ? "seat" : "seats"}`;
+}
+
+interface TierDetailsDialogProps {
+  tier: SponsorTierView | null;
+  canChoose: boolean;
+  onClose: () => void;
+  onChoose: (key: string) => void;
+}
+
+/** Full benefit list for one level, in a native modal dialog (Escape and the close button both close it). */
+function TierDetailsDialog({ tier, canChoose, onClose, onChoose }: TierDetailsDialogProps) {
+  const ref = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    const dialog = ref.current;
+    if (!dialog) return;
+    if (tier && !dialog.open) dialog.showModal();
+    if (!tier && dialog.open) dialog.close();
+  }, [tier]);
+
+  const details = tier ? parseDescription(tier.description) : null;
+  const soldOut = !!tier && tier.remaining !== null && tier.remaining <= 0;
 
   return (
-    <div className="mt-3">
-      {intro.map((line, i) => (
-        <p key={i} className="text-sm text-on-surface-variant">
-          {line}
-        </p>
-      ))}
-      {shown.length > 0 && (
-        <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-on-surface-variant">
-          {shown.map((item, i) => (
-            <li key={i}>{item}</li>
-          ))}
-        </ul>
+    <dialog
+      ref={ref}
+      aria-labelledby="sponsor-dialog-title"
+      onClose={onClose}
+      onClick={(e) => {
+        // A click on the dimmed backdrop (outside the panel) closes it.
+        if (e.target === ref.current) onClose();
+      }}
+      className="m-auto w-[min(36rem,calc(100vw-2rem))] max-h-[85vh] rounded-lg bg-white p-0 text-on-surface shadow-2xl backdrop:bg-black/60"
+    >
+      {tier && details && (
+        <div className="flex max-h-[85vh] flex-col">
+          <div className="border-t-4 border-harvest-gold px-6 pb-4 pt-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 id="sponsor-dialog-title" className="font-[family-name:var(--font-headline)] text-2xl text-primary">
+                  {tier.name}
+                </h3>
+                <p className="mt-1 text-2xl font-semibold">{formatUsd(tier.amountCents)}</p>
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Close"
+                className={`rounded-full p-1 text-on-surface-variant hover:bg-surface-container-lowest ${FOCUS_RING}`}
+              >
+                <span aria-hidden="true" className="material-symbols-outlined">
+                  close
+                </span>
+              </button>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {(tier.seats ?? 0) > 0 && (
+                <span className="rounded-chip bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                  {seatsLabel(tier.seats)}
+                </span>
+              )}
+              {tier.limit !== null && (
+                <span className="rounded-chip bg-harvest-gold/20 px-3 py-1 text-xs font-medium text-primary">
+                  {soldOut ? "Fully sponsored" : `Only ${tier.remaining} of ${tier.limit} available`}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="overflow-y-auto px-6 pb-2">
+            {details.intro && <p className="text-on-surface-variant">{details.intro}</p>}
+            {details.bullets.length > 0 && (
+              <>
+                <h4 className="mt-5 text-sm font-semibold uppercase tracking-wide text-on-surface-variant">
+                  Benefits
+                </h4>
+                <ul className="mt-3 space-y-2">
+                  {details.bullets.map((item, i) => (
+                    <li key={i} className="flex gap-3 text-sm text-on-surface">
+                      <span aria-hidden="true" className="material-symbols-outlined text-lg leading-5 text-harvest-gold">
+                        check_circle
+                      </span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-3 border-t border-outline-variant px-6 py-4 sm:flex-row-reverse">
+            <button
+              type="button"
+              disabled={soldOut || !canChoose}
+              onClick={() => onChoose(tier.key)}
+              className={`btn btn-md btn-primary sm:flex-1 ${FOCUS_RING} disabled:cursor-not-allowed disabled:opacity-50`}
+            >
+              {soldOut ? "Fully sponsored" : `Sponsor at ${formatUsd(tier.amountCents)}`}
+            </button>
+            <button type="button" onClick={onClose} className={`btn btn-md btn-outline sm:flex-1 ${FOCUS_RING}`}>
+              Back to all levels
+            </button>
+          </div>
+        </div>
       )}
-      {collapsible && (
-        <button
-          type="button"
-          aria-expanded={expanded}
-          onClick={() => setExpanded((v) => !v)}
-          className={`mt-2 rounded-sm text-sm font-medium text-primary hover:underline ${FOCUS_RING}`}
-        >
-          {expanded ? "Show fewer" : `Show all ${bullets.length} benefits`}
-        </button>
-      )}
-    </div>
+    </dialog>
   );
 }
 
@@ -76,8 +162,22 @@ export function SponsorSection({ slug, eventTitle, tiers, salesOpen }: SponsorSe
   const [phone, setPhone] = useState("");
   const [company, setCompany] = useState("");
   const [success, setSuccess] = useState<CheckoutSuccess | null>(null);
+  const [detailsKey, setDetailsKey] = useState<string | null>(null);
+  const formRef = useRef<HTMLDivElement>(null);
 
   const selected = tiers.find((t) => t.key === selectedKey) ?? null;
+  const detailsTier = tiers.find((t) => t.key === detailsKey) ?? null;
+  const topAmount = Math.max(...tiers.map((t) => t.amountCents));
+
+  function chooseTier(key: string) {
+    setDetailsKey(null);
+    setSelectedKey(key);
+  }
+
+  // Bring the sponsor form into view once a level is chosen.
+  useEffect(() => {
+    if (selectedKey) formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [selectedKey]);
   const ready = !!selected && fullName.trim().length > 0 && EMAIL_PATTERN.test(email.trim());
 
   return (
@@ -110,39 +210,79 @@ export function SponsorSection({ slug, eventTitle, tiers, salesOpen }: SponsorSe
         </div>
       ) : (
         <>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {tiers.map((tier) => {
               const soldOut = tier.remaining !== null && tier.remaining <= 0;
               const isSelected = tier.key === selectedKey;
+              const isPremier = tier.amountCents === topAmount && tiers.length > 1;
+              const { intro } = parseDescription(tier.description || "");
               return (
                 <div
                   key={tier.key}
-                  className={`flex flex-col rounded-lg border-t-4 bg-white p-6 shadow-sm transition-shadow ${
-                    isSelected ? "border-primary shadow-lg ring-1 ring-primary" : "border-harvest-gold"
-                  }`}
+                  className={`relative flex flex-col rounded-lg p-6 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg ${
+                    isPremier ? "bg-primary text-white" : "border-t-4 border-harvest-gold bg-white"
+                  } ${isSelected ? "ring-2 ring-harvest-gold ring-offset-2" : ""}`}
                 >
-                  <h3 className="font-[family-name:var(--font-headline)] text-lg text-primary">{tier.name}</h3>
-                  <p className="mt-1 text-2xl font-semibold text-on-surface">{formatUsd(tier.amountCents)}</p>
-                  {tier.limit !== null && (
-                    <p className="mt-1 text-xs font-medium uppercase tracking-wide text-on-surface-variant">
-                      {soldOut ? "Fully sponsored" : `${tier.remaining} of ${tier.limit} available`}
+                  {isPremier && (
+                    <span className="absolute -top-3 left-6 rounded-chip bg-harvest-gold px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
+                      Premier
+                    </span>
+                  )}
+                  <h3
+                    className={`font-[family-name:var(--font-headline)] text-lg leading-snug ${isPremier ? "text-white" : "text-primary"}`}
+                  >
+                    {tier.name}
+                  </h3>
+                  <p className={`mt-2 text-3xl font-semibold ${isPremier ? "text-harvest-gold" : "text-on-surface"}`}>
+                    {formatUsd(tier.amountCents).replace(/\.00$/, "")}
+                  </p>
+
+                  <div className="mt-3 flex min-h-7 flex-wrap gap-2">
+                    {(tier.seats ?? 0) > 0 && (
+                      <span
+                        className={`rounded-chip px-3 py-1 text-xs font-medium ${isPremier ? "bg-white/15 text-white" : "bg-primary/10 text-primary"}`}
+                      >
+                        {seatsLabel(tier.seats)}
+                      </span>
+                    )}
+                    {tier.limit !== null && (
+                      <span
+                        className={`rounded-chip px-3 py-1 text-xs font-medium ${isPremier ? "bg-harvest-gold text-primary" : "bg-harvest-gold/20 text-primary"}`}
+                      >
+                        {soldOut ? "Fully sponsored" : `Only ${tier.remaining} left`}
+                      </span>
+                    )}
+                  </div>
+
+                  {intro && (
+                    <p className={`mt-3 line-clamp-3 text-sm ${isPremier ? "text-white/85" : "text-on-surface-variant"}`}>
+                      {tagline(intro)}
                     </p>
                   )}
-                  {(tier.seats ?? 0) > 0 && (
-                    <p className="mt-2 inline-block w-max rounded-chip bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-                      Includes {tier.seats} {tier.seats === 1 ? "seat" : "seats"}
-                    </p>
-                  )}
-                  {tier.description && <TierBenefits description={tier.description} />}
-                  <div className="mt-auto pt-5">
+
+                  <div className="mt-auto space-y-2 pt-5">
+                    {tier.description && (
+                      <button
+                        type="button"
+                        onClick={() => setDetailsKey(tier.key)}
+                        className={`w-full rounded-sm py-1 text-sm font-medium underline-offset-4 hover:underline ${
+                          isPremier ? "text-harvest-gold" : "text-primary"
+                        } ${FOCUS_RING}`}
+                      >
+                        See more
+                        <span className="sr-only"> about {tier.name}</span>
+                      </button>
+                    )}
                     <button
                       type="button"
                       disabled={soldOut || !salesOpen}
                       aria-pressed={isSelected}
-                      onClick={() => setSelectedKey(tier.key)}
-                      className={`btn btn-md w-full ${isSelected ? "btn-primary" : "btn-outline"} ${FOCUS_RING} disabled:cursor-not-allowed disabled:opacity-50`}
+                      onClick={() => chooseTier(tier.key)}
+                      className={`btn btn-md w-full ${
+                        isPremier ? "btn-gold" : isSelected ? "btn-primary" : "btn-outline"
+                      } ${FOCUS_RING} disabled:cursor-not-allowed disabled:opacity-50`}
                     >
-                      {soldOut ? "Fully sponsored" : isSelected ? "Selected" : "Choose this level"}
+                      {soldOut ? "Fully sponsored" : isSelected ? "Selected" : "Choose"}
                     </button>
                   </div>
                 </div>
@@ -150,8 +290,15 @@ export function SponsorSection({ slug, eventTitle, tiers, salesOpen }: SponsorSe
             })}
           </div>
 
+          <TierDetailsDialog
+            tier={detailsTier}
+            canChoose={salesOpen}
+            onClose={() => setDetailsKey(null)}
+            onChoose={chooseTier}
+          />
+
           {selected && salesOpen && (
-            <div className="rounded-lg border border-outline-variant bg-white p-6 shadow-sm md:p-8">
+            <div ref={formRef} className="max-w-3xl scroll-mt-24 rounded-lg border border-outline-variant bg-white p-6 shadow-sm md:p-8">
               <h3 className="font-[family-name:var(--font-headline)] text-xl text-primary">
                 {selected.name}: {formatUsd(selected.amountCents)}
               </h3>
