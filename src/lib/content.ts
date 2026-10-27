@@ -18,6 +18,13 @@ export const contact = {
   chairmanTitle: "Chairman / President",
 };
 
+/** Who sponsors talk to about invoices, checks, and recognition (from the Prayer Breakfast invitation). */
+export const sponsorContact = {
+  name: "Earl Philip",
+  email: "earl@rap-usvi.org",
+  phone: "(954) 539-2675",
+};
+
 export const donation = {
   ein: "41-3545317",
   mailingAddress: "7901 4th Street N, STE 300, St. Petersburg, FL 33702",

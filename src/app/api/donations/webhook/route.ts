@@ -3,6 +3,8 @@ import { createServiceRoleClient } from "@/lib/supabase/server";
 import { verifyPayPalWebhookSignature } from "@/lib/paypal";
 import { sendDonationReceiptEmail } from "@/lib/donationEmail";
 import type { DonationRow } from "@/lib/donations";
+import type { EventRow } from "@/lib/events";
+import { claimCheckoutHold, completeEventPayment, releaseCheckoutHold } from "@/lib/eventCheckout";
 
 interface PayPalCaptureResource {
   id: string;
@@ -55,6 +57,11 @@ export async function POST(request: Request) {
   }
 
   const row = donation as DonationRow;
+
+  if (row.purpose === "ticket" || row.purpose === "sponsorship") {
+    await handleEventPaymentWebhook(supabase, event, row);
+    return NextResponse.json({ success: true });
+  }
 
   switch (event.event_type) {
     case "PAYMENT.CAPTURE.COMPLETED": {
@@ -131,4 +138,102 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ success: true });
+}
+
+function payerDetails(resource: PayPalCaptureResource) {
+  return {
+    captureId: resource.id,
+    payerId: resource.payer?.payer_id ?? null,
+    payerEmail: resource.payer?.email_address ?? null,
+    payerName: resource.payer?.name
+      ? [resource.payer.name.given_name, resource.payer.name.surname].filter(Boolean).join(" ")
+      : null,
+  };
+}
+
+/**
+ * Backup path for ticket and sponsorship payments. The capture route normally
+ * finishes these; this catches the rare case where PayPal took the money but
+ * our capture request never finished (a timeout or a closed browser tab).
+ */
+async function handleEventPaymentWebhook(
+  supabase: ReturnType<typeof createServiceRoleClient>,
+  event: PayPalWebhookEvent,
+  row: DonationRow
+) {
+  const resource = event.resource;
+
+  switch (event.event_type) {
+    case "PAYMENT.CAPTURE.COMPLETED": {
+      // Also accept rows our capture route marked failed: if PayPal says the
+      // money moved, the buyer paid and must get their seats or a flag for staff.
+      if (row.status === "completed" || row.status === "refunded" || !row.event_id) break;
+
+      const capturedCents = resource.amount ? Math.round(parseFloat(resource.amount.value) * 100) : null;
+      if (capturedCents !== row.amount_cents || resource.amount?.currency_code !== row.currency) {
+        console.error("PayPal webhook capture amount/currency mismatch for event payment", {
+          paymentId: row.id,
+          expectedCents: row.amount_cents,
+          received: resource.amount,
+        });
+        await supabase
+          .from("donations")
+          .update({
+            status: "failed",
+            attention: "PayPal reported a different amount than expected. Check this payment in PayPal.",
+          })
+          .eq("id", row.id)
+          .neq("status", "completed");
+        break;
+      }
+
+      const { data: eventRow } = await supabase.from("events").select("*").eq("id", row.event_id).maybeSingle();
+      if (!eventRow) break;
+
+      if (row.status === "failed") {
+        await supabase.from("donations").update({ status: "pending" }).eq("id", row.id).eq("status", "failed");
+      }
+
+      let attention: string | null = null;
+      if (!row.seats_claimed_at) {
+        const { errorCode } = await claimCheckoutHold(supabase, row);
+        if (errorCode) {
+          attention = `Paid, but the ${row.purpose === "ticket" ? "seats" : "sponsor slot"} could not be held (${errorCode}). Contact the buyer or refund in PayPal.`;
+        }
+      }
+
+      const { data: freshRow } = await supabase.from("donations").select("*").eq("id", row.id).single();
+      await completeEventPayment(
+        supabase,
+        (freshRow ?? row) as DonationRow,
+        eventRow as EventRow,
+        payerDetails(resource),
+        attention
+      );
+      break;
+    }
+    case "PAYMENT.CAPTURE.DENIED": {
+      if (row.status !== "completed") {
+        await releaseCheckoutHold(supabase, row.id);
+        await supabase.from("donations").update({ status: "failed" }).eq("id", row.id);
+      }
+      break;
+    }
+    case "PAYMENT.CAPTURE.REFUNDED": {
+      await supabase
+        .from("donations")
+        .update({
+          status: "refunded",
+          refunded_at: new Date().toISOString(),
+          attention:
+            row.purpose === "ticket"
+              ? "Refunded in PayPal. Cancel this buyer's RSVP if the seats should go back on sale."
+              : null,
+        })
+        .eq("id", row.id);
+      break;
+    }
+    default:
+      break;
+  }
 }

@@ -15,7 +15,7 @@ import {
 } from "@/app/admin/events/actions";
 import { slugify, flyerRatioValues } from "@/lib/events";
 import type { FlyerRatio, EventMediaRow } from "@/lib/events";
-import type { EventStatus, PopupImageSource } from "@/lib/validation/event";
+import type { EventStatus, PopupImageSource, SponsorTier } from "@/lib/validation/event";
 import { popupImageSourceValues } from "@/lib/validation/event";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 
@@ -67,6 +67,28 @@ export interface EventFormInitial {
   popupStartsAt: string;
   popupEndsAt: string;
   popupImageSource: PopupImageSource;
+  ticketPriceCents: number | null;
+  ticketMaxPerOrder: number;
+  sponsorTiers: SponsorTier[];
+}
+
+/** Sponsor levels are edited as strings so half-typed numbers don't jump around. */
+interface SponsorTierDraft {
+  key: string;
+  name: string;
+  amount: string;
+  description: string;
+  limit: string;
+}
+
+function tierToDraft(tier: SponsorTier): SponsorTierDraft {
+  return {
+    key: tier.key,
+    name: tier.name,
+    amount: String(tier.amountCents / 100),
+    description: tier.description,
+    limit: tier.limit === null ? "" : String(tier.limit),
+  };
 }
 
 const DEFAULTS: EventFormInitial = {
@@ -93,6 +115,9 @@ const DEFAULTS: EventFormInitial = {
   popupStartsAt: "",
   popupEndsAt: "",
   popupImageSource: "banner",
+  ticketPriceCents: null,
+  ticketMaxPerOrder: 8,
+  sponsorTiers: [],
 };
 
 interface EventFormProps {
@@ -126,6 +151,11 @@ export function EventForm({ mode, eventId, initial, initialMedia }: EventFormPro
   const [popupStartsAt, setPopupStartsAt] = useState(values.popupStartsAt);
   const [popupEndsAt, setPopupEndsAt] = useState(values.popupEndsAt);
   const [popupImageSource, setPopupImageSource] = useState<PopupImageSource>(values.popupImageSource);
+  const [ticketPrice, setTicketPrice] = useState(
+    values.ticketPriceCents === null ? "" : String(values.ticketPriceCents / 100)
+  );
+  const [ticketMaxPerOrder, setTicketMaxPerOrder] = useState(String(values.ticketMaxPerOrder));
+  const [sponsorTiers, setSponsorTiers] = useState<SponsorTierDraft[]>(values.sponsorTiers.map(tierToDraft));
 
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
@@ -160,7 +190,30 @@ export function EventForm({ mode, eventId, initial, initialMedia }: EventFormPro
       popupStartsAt,
       popupEndsAt,
       popupImageSource,
+      ticketPrice: ticketPrice.trim() === "" ? null : Number(ticketPrice),
+      ticketMaxPerOrder: Number(ticketMaxPerOrder) || 1,
+      sponsorTiers: sponsorTiers.map((tier) => ({
+        key: tier.key,
+        name: tier.name,
+        amount: Number(tier.amount),
+        description: tier.description,
+        limit: tier.limit.trim() === "" ? null : Number(tier.limit),
+      })),
     };
+  }
+
+  function updateTier(index: number, patch: Partial<SponsorTierDraft>) {
+    setSponsorTiers((tiers) => tiers.map((tier, i) => (i === index ? { ...tier, ...patch } : tier)));
+  }
+
+  function moveTier(index: number, direction: -1 | 1) {
+    setSponsorTiers((tiers) => {
+      const target = index + direction;
+      if (target < 0 || target >= tiers.length) return tiers;
+      const next = [...tiers];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
   }
 
   function handleSave() {
@@ -370,6 +423,149 @@ export function EventForm({ mode, eventId, initial, initialMedia }: EventFormPro
             Enable waitlist when full
           </label>
         </div>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-on-surface-variant">Tickets</h2>
+        <p className="text-sm text-on-surface-variant">
+          Leave the price blank for a free RSVP. Add a price and the event page sells seats through PayPal instead,
+          and each paid seat counts toward capacity automatically.
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label htmlFor="ev-ticket-price" className={LABEL_CLASS}>
+              PRICE PER SEAT, USD (blank = free)
+            </label>
+            <input
+              id="ev-ticket-price"
+              type="number"
+              min={5}
+              step="0.01"
+              inputMode="decimal"
+              value={ticketPrice}
+              onChange={(e) => setTicketPrice(e.target.value)}
+              className={FIELD_CLASS}
+            />
+          </div>
+          <div>
+            <label htmlFor="ev-ticket-max" className={LABEL_CLASS}>
+              MOST SEATS PER ORDER
+            </label>
+            <input
+              id="ev-ticket-max"
+              type="number"
+              min={1}
+              max={20}
+              value={ticketMaxPerOrder}
+              onChange={(e) => setTicketMaxPerOrder(e.target.value)}
+              className={FIELD_CLASS}
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-on-surface-variant">Sponsor Levels</h2>
+        <p className="text-sm text-on-surface-variant">
+          Each level shows as a card on the event page with its own PayPal checkout. Leave &ldquo;how many&rdquo;
+          blank for no limit.
+        </p>
+        {sponsorTiers.map((tier, index) => (
+          <fieldset key={index} className="space-y-3 rounded-lg border border-outline-variant p-4">
+            <legend className="px-1 text-sm font-medium text-on-surface-variant">Level {index + 1}</legend>
+            <div className="grid gap-3 sm:grid-cols-[2fr_1fr_1fr]">
+              <div>
+                <label htmlFor={`ev-tier-name-${index}`} className={LABEL_CLASS}>
+                  NAME
+                </label>
+                <input
+                  id={`ev-tier-name-${index}`}
+                  type="text"
+                  value={tier.name}
+                  onChange={(e) => updateTier(index, { name: e.target.value })}
+                  className={FIELD_CLASS}
+                />
+              </div>
+              <div>
+                <label htmlFor={`ev-tier-amount-${index}`} className={LABEL_CLASS}>
+                  AMOUNT, USD
+                </label>
+                <input
+                  id={`ev-tier-amount-${index}`}
+                  type="number"
+                  min={5}
+                  step="0.01"
+                  inputMode="decimal"
+                  value={tier.amount}
+                  onChange={(e) => updateTier(index, { amount: e.target.value })}
+                  className={FIELD_CLASS}
+                />
+              </div>
+              <div>
+                <label htmlFor={`ev-tier-limit-${index}`} className={LABEL_CLASS}>
+                  HOW MANY
+                </label>
+                <input
+                  id={`ev-tier-limit-${index}`}
+                  type="number"
+                  min={1}
+                  value={tier.limit}
+                  onChange={(e) => updateTier(index, { limit: e.target.value })}
+                  className={FIELD_CLASS}
+                />
+              </div>
+            </div>
+            <div>
+              <label htmlFor={`ev-tier-desc-${index}`} className={LABEL_CLASS}>
+                WHAT SPONSORS GET (OPTIONAL)
+              </label>
+              <textarea
+                id={`ev-tier-desc-${index}`}
+                rows={2}
+                maxLength={500}
+                value={tier.description}
+                onChange={(e) => updateTier(index, { description: e.target.value })}
+                className={FIELD_CLASS}
+              />
+            </div>
+            <div className="flex flex-wrap gap-3 text-sm">
+              <button
+                type="button"
+                onClick={() => moveTier(index, -1)}
+                disabled={index === 0}
+                className={`text-on-surface-variant hover:text-primary disabled:opacity-40 ${FOCUS_RING}`}
+              >
+                Move up
+              </button>
+              <button
+                type="button"
+                onClick={() => moveTier(index, 1)}
+                disabled={index === sponsorTiers.length - 1}
+                className={`text-on-surface-variant hover:text-primary disabled:opacity-40 ${FOCUS_RING}`}
+              >
+                Move down
+              </button>
+              <button
+                type="button"
+                onClick={() => setSponsorTiers((tiers) => tiers.filter((_, i) => i !== index))}
+                className={`text-error hover:underline ${FOCUS_RING}`}
+              >
+                Remove level
+              </button>
+            </div>
+          </fieldset>
+        ))}
+        {sponsorTiers.length < 10 && (
+          <button
+            type="button"
+            onClick={() =>
+              setSponsorTiers((tiers) => [...tiers, { key: "", name: "", amount: "", description: "", limit: "" }])
+            }
+            className={`rounded-lg border border-outline-variant px-4 py-2 text-sm font-medium text-on-surface-variant transition-colors hover:border-primary hover:text-primary ${FOCUS_RING}`}
+          >
+            Add sponsor level
+          </button>
+        )}
       </section>
 
       {mode === "edit" && eventId ? (

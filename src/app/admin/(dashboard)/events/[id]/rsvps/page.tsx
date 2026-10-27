@@ -1,3 +1,5 @@
+import { formatUsd } from "@/lib/donations";
+import { settleStaleHolds } from "@/lib/eventCheckout";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -36,6 +38,13 @@ export default async function EventRsvpsPage({
   const supabase = createServiceRoleClient();
   const { data: event } = await supabase.from("events").select("*").eq("id", id).maybeSingle();
   if (!event) notFound();
+
+  // Settle any paid checkout PayPal never confirmed, so this list is accurate for check in.
+  try {
+    await settleStaleHolds(supabase, id);
+  } catch (err) {
+    console.error("Stale hold sweep failed", err);
+  }
 
   let query = supabase.from("event_rsvps").select("*").eq("event_id", id).order("created_at", { ascending: false });
   if (activeStatus) query = query.eq("status", activeStatus);
@@ -103,7 +112,7 @@ export default async function EventRsvpsPage({
 
       {!error && rows.length > 0 && (
         <div className="overflow-x-auto rounded-lg border border-outline-variant bg-surface-container-lowest">
-          <table className="w-full min-w-[820px] text-left text-sm">
+          <table className="w-full min-w-[900px] text-left text-sm">
             <caption className="sr-only">RSVPs for {(event as EventRow).title}, most recent first</caption>
             <thead className="border-b border-outline-variant text-xs uppercase tracking-wide text-on-surface-variant">
               <tr>
@@ -118,6 +127,9 @@ export default async function EventRsvpsPage({
                 </th>
                 <th scope="col" className="px-4 py-3 font-medium">
                   Guests
+                </th>
+                <th scope="col" className="px-4 py-3 font-medium">
+                  Paid
                 </th>
                 <th scope="col" className="px-4 py-3 font-medium">
                   Status
@@ -150,6 +162,9 @@ export default async function EventRsvpsPage({
                     </a>
                   </td>
                   <td className="px-4 py-3 text-on-surface-variant">{rsvp.guest_count}</td>
+                  <td className="whitespace-nowrap px-4 py-3 text-on-surface-variant">
+                    {rsvp.paid_cents > 0 ? formatUsd(rsvp.paid_cents) : "—"}
+                  </td>
                   <td className="px-4 py-3">
                     <RsvpStatusSelect id={rsvp.id} eventId={id} status={rsvp.status} name={rsvp.full_name} />
                   </td>

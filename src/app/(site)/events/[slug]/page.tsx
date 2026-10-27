@@ -5,6 +5,10 @@ import { createServiceRoleClient } from "@/lib/supabase/server";
 import { computeAvailability, formatEventDateRange, getEventRsvpSummary } from "@/lib/events";
 import type { EventRow, EventMediaRow } from "@/lib/events";
 import { EventRsvpForm } from "@/components/forms/EventRsvpForm";
+import { TicketCheckout } from "@/components/events/TicketCheckout";
+import { SponsorSection, type SponsorTierView } from "@/components/events/SponsorSection";
+import { EventPayPalProvider } from "@/components/events/EventPayPalProvider";
+import { getSponsorTierSales } from "@/lib/eventCheckout";
 import { sanitizeStoredDescription } from "@/lib/sanitizeHtml";
 import { site } from "@/lib/content";
 
@@ -58,6 +62,17 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const isPast = new Date(event.end_at) < new Date();
   const rsvpOpen = event.rsvp_enabled && !isPast;
   const media = await getEventMedia(event.id);
+  const isTicketed = event.ticket_price_cents !== null;
+
+  const sponsorTiers = event.sponsor_tiers ?? [];
+  let sponsorTierViews: SponsorTierView[] = [];
+  if (sponsorTiers.length > 0) {
+    const sales = await getSponsorTierSales(supabase, event.id);
+    sponsorTierViews = sponsorTiers.map((tier) => ({
+      ...tier,
+      remaining: tier.limit === null ? null : Math.max(tier.limit - (sales[tier.key] ?? 0), 0),
+    }));
+  }
 
   return (
     <article>
@@ -84,6 +99,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         </div>
       </div>
 
+      <EventPayPalProvider enabled={isTicketed || sponsorTierViews.length > 0}>
       <div className="mx-auto grid max-w-container-max grid-cols-1 gap-12 px-margin-mobile py-16 md:px-margin-desktop lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           <div className="flex flex-wrap items-center gap-3 text-caribbean-azure">
@@ -135,8 +151,18 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
             </div>
           ) : !rsvpOpen ? (
             <div className="rounded-lg border border-outline-variant bg-surface-container-lowest p-8 text-center">
-              <p className="text-on-surface-variant">RSVPs are closed for this event.</p>
+              <p className="text-on-surface-variant">
+                {isTicketed ? "Ticket sales are closed for this event." : "RSVPs are closed for this event."}
+              </p>
             </div>
+          ) : isTicketed ? (
+            <TicketCheckout
+              slug={event.slug}
+              priceCents={event.ticket_price_cents!}
+              maxPerOrder={event.ticket_max_per_order}
+              capacity={availability.capacity}
+              spotsLeft={availability.spotsLeft}
+            />
           ) : (
             <EventRsvpForm
               slug={event.slug}
@@ -148,6 +174,19 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           )}
         </div>
       </div>
+      {sponsorTierViews.length > 0 && (
+        <div className="mx-auto max-w-container-max px-margin-mobile pb-16 md:px-margin-desktop">
+          <div className="lg:w-2/3">
+            <SponsorSection
+              slug={event.slug}
+              eventTitle={event.title}
+              tiers={sponsorTierViews}
+              salesOpen={!isPast}
+            />
+          </div>
+        </div>
+      )}
+      </EventPayPalProvider>
     </article>
   );
 }

@@ -1,5 +1,8 @@
 export type DonationStatus = "pending" | "completed" | "failed" | "refunded";
 
+/** The donations table records every PayPal payment: general gifts, event tickets, and event sponsorships. */
+export type PaymentPurpose = "donation" | "ticket" | "sponsorship";
+
 export interface DonationRow {
   id: string;
   created_at: string;
@@ -21,6 +24,16 @@ export interface DonationRow {
   ip_hash: string | null;
   user_agent: string | null;
   source_page: string | null;
+  purpose: PaymentPurpose;
+  event_id: string | null;
+  quantity: number | null;
+  sponsor_tier_key: string | null;
+  sponsor_tier_name: string | null;
+  organization: string | null;
+  phone: string | null;
+  rsvp_id: string | null;
+  seats_claimed_at: string | null;
+  attention: string | null;
 }
 
 export const MIN_DONATION_CENTS = 500;

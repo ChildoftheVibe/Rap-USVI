@@ -24,6 +24,9 @@ export async function POST(request: Request) {
     .from("donations")
     .select("*")
     .eq("paypal_order_id", parsed.data.orderId)
+    // Ticket and sponsorship orders finish through /api/events/[slug]/checkout/capture,
+    // which holds seats first. Never let this route capture one of those.
+    .eq("purpose", "donation")
     .maybeSingle();
 
   if (fetchError || !donation) {

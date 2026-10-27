@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { createServiceRoleClient } from "@/lib/supabase/server";
-import type { DonationRow, DonationStatus } from "@/lib/donations";
+import type { DonationRow, DonationStatus, PaymentPurpose } from "@/lib/donations";
 import { formatUsd } from "@/lib/donations";
 
 export const metadata: Metadata = {
@@ -22,6 +22,25 @@ const STATUS_CHIP: Record<DonationStatus, string> = {
   refunded: "bg-error/10 text-error",
 };
 
+const PURPOSE_LABEL: Record<PaymentPurpose, string> = {
+  donation: "Donation",
+  ticket: "Ticket",
+  sponsorship: "Sponsor",
+};
+
+type PaymentWithEvent = DonationRow & { events: { title: string } | null };
+
+function paymentDetail(row: PaymentWithEvent): string {
+  if (row.purpose === "ticket") {
+    const seats = `${row.quantity ?? 1} seat${row.quantity === 1 ? "" : "s"}`;
+    return row.events?.title ? `${seats}, ${row.events.title}` : seats;
+  }
+  if (row.purpose === "sponsorship") {
+    return [row.sponsor_tier_name, row.organization, row.events?.title].filter(Boolean).join(", ");
+  }
+  return row.dedication || "—";
+}
+
 function isDonationStatus(value: string | undefined): value is DonationStatus {
   return !!value && (STATUS_VALUES as string[]).includes(value);
 }
@@ -36,10 +55,10 @@ export default async function AdminDonationsPage({
 
   const supabase = createServiceRoleClient();
 
-  let query = supabase.from("donations").select("*").order("created_at", { ascending: false });
+  let query = supabase.from("donations").select("*, events(title)").order("created_at", { ascending: false });
   if (activeStatus) query = query.eq("status", activeStatus);
   const { data: donations, error } = await query;
-  const rows = (donations ?? []) as DonationRow[];
+  const rows = (donations ?? []) as PaymentWithEvent[];
 
   const { data: completedRows } = await supabase.from("donations").select("amount_cents, created_at").eq("status", "completed");
   const totalRaisedCents = (completedRows ?? []).reduce((sum, r) => sum + r.amount_cents, 0);
@@ -78,7 +97,7 @@ export default async function AdminDonationsPage({
           <p className="mt-2 text-3xl font-semibold text-primary">{formatUsd(totalRaisedCents)}</p>
         </div>
         <div className="rounded-lg border border-outline-variant bg-surface-container-lowest p-6">
-          <p className="text-sm font-medium uppercase tracking-wide text-on-surface-variant">Completed Gifts</p>
+          <p className="text-sm font-medium uppercase tracking-wide text-on-surface-variant">Completed Payments</p>
           <p className="mt-2 text-3xl font-semibold text-primary">{(completedRows ?? []).length}</p>
         </div>
         <div className="rounded-lg border border-outline-variant bg-surface-container-lowest p-6">
@@ -123,7 +142,7 @@ export default async function AdminDonationsPage({
 
       {!error && rows.length > 0 && (
         <div className="overflow-x-auto rounded-lg border border-outline-variant bg-surface-container-lowest">
-          <table className="w-full min-w-[860px] text-left text-sm">
+          <table className="w-full min-w-[960px] text-left text-sm">
             <caption className="sr-only">Donations, most recent first</caption>
             <thead className="border-b border-outline-variant text-xs uppercase tracking-wide text-on-surface-variant">
               <tr>
@@ -131,7 +150,8 @@ export default async function AdminDonationsPage({
                 <th scope="col" className="px-4 py-3 font-medium">Donor</th>
                 <th scope="col" className="px-4 py-3 font-medium">Amount</th>
                 <th scope="col" className="px-4 py-3 font-medium">Status</th>
-                <th scope="col" className="px-4 py-3 font-medium">Dedication</th>
+                <th scope="col" className="px-4 py-3 font-medium">Type</th>
+                <th scope="col" className="px-4 py-3 font-medium">Details</th>
                 <th scope="col" className="px-4 py-3 font-medium">PayPal IDs</th>
               </tr>
             </thead>
@@ -157,8 +177,14 @@ export default async function AdminDonationsPage({
                       {donation.status}
                     </span>
                   </td>
-                  <td className="max-w-[200px] truncate px-4 py-3 text-on-surface-variant">
-                    {donation.dedication || "—"}
+                  <td className="whitespace-nowrap px-4 py-3 text-on-surface-variant">
+                    {PURPOSE_LABEL[donation.purpose] ?? "Donation"}
+                  </td>
+                  <td className="max-w-[260px] px-4 py-3 text-on-surface-variant">
+                    <span className="block truncate">{paymentDetail(donation)}</span>
+                    {donation.attention && (
+                      <span className="mt-1 block text-xs font-medium text-error">{donation.attention}</span>
+                    )}
                   </td>
                   <td className="px-4 py-3 font-mono text-xs text-on-surface-variant">
                     {donation.paypal_capture_id ?? donation.paypal_order_id ?? "—"}

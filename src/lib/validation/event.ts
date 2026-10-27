@@ -8,6 +8,36 @@ export type PopupImageSource = (typeof popupImageSourceValues)[number];
 
 const slugPattern = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
+/** Payments ride the donations table, which only accepts $5 to $25,000 per PayPal order. */
+export const MIN_PAYMENT_DOLLARS = 5;
+export const MAX_PAYMENT_DOLLARS = 25_000;
+
+const dollarAmountSchema = z
+  .number()
+  .min(MIN_PAYMENT_DOLLARS, `Amount must be at least $${MIN_PAYMENT_DOLLARS}`)
+  .max(MAX_PAYMENT_DOLLARS, `Amount can't be more than $${MAX_PAYMENT_DOLLARS.toLocaleString()}`)
+  .refine((v) => Math.abs(Math.round(v * 100) - v * 100) < 1e-6, "Amount can have at most 2 decimal places");
+
+/** A sponsorship level as stored on `events.sponsor_tiers`. */
+export interface SponsorTier {
+  key: string;
+  name: string;
+  amountCents: number;
+  description: string;
+  /** How many sponsors can buy this level. Null means no limit. */
+  limit: number | null;
+}
+
+export const sponsorTierInputSchema = z.object({
+  key: z.string().trim().max(60).regex(/^[a-z0-9-]*$/).optional().or(z.literal("")),
+  name: z.string().trim().min(1, "Each sponsor level needs a name").max(120),
+  amount: dollarAmountSchema,
+  description: z.string().trim().max(500).optional().or(z.literal("")),
+  limit: z.number().int().min(1).max(1000).nullable().optional(),
+});
+
+export type SponsorTierInput = z.infer<typeof sponsorTierInputSchema>;
+
 /** Datetime-local input value (`YYYY-MM-DDTHH:mm`), treated as America/St_Thomas wall-clock time. */
 const localDateTimeSchema = z
   .string()
@@ -41,6 +71,10 @@ export const eventSchema = z
     popupStartsAt: localDateTimeSchema.optional().or(z.literal("")),
     popupEndsAt: localDateTimeSchema.optional().or(z.literal("")),
     popupImageSource: z.enum(popupImageSourceValues).default("banner"),
+    /** Dollars per seat. Null keeps the event a free RSVP. */
+    ticketPrice: dollarAmountSchema.nullable().optional(),
+    ticketMaxPerOrder: z.number().int().min(1).max(20).default(8),
+    sponsorTiers: z.array(sponsorTierInputSchema).max(10, "Use 10 sponsor levels or fewer").default([]),
   })
   .refine((data) => data.endAt > data.startAt, {
     message: "End time must be after the start time",

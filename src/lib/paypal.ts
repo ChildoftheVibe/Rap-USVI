@@ -73,9 +73,12 @@ interface CreateOrderResult {
 export async function createPayPalOrder({
   donationId,
   amountCents,
+  description = "Donation to Restore America's Paradise, Inc.",
 }: {
   donationId: string;
   amountCents: number;
+  /** Shown to the buyer in PayPal. PayPal caps this at 127 characters. */
+  description?: string;
 }): Promise<CreateOrderResult> {
   return paypalFetch<CreateOrderResult>("/v2/checkout/orders", {
     method: "POST",
@@ -86,7 +89,7 @@ export async function createPayPalOrder({
         {
           reference_id: donationId,
           custom_id: donationId,
-          description: "Donation to Restore America's Paradise, Inc.",
+          description: description.slice(0, 127),
           amount: {
             currency_code: "USD",
             value: (amountCents / 100).toFixed(2),
@@ -114,6 +117,28 @@ interface CaptureResult {
     email_address?: string;
     name?: { given_name?: string; surname?: string };
   };
+}
+
+export interface PayPalOrderDetails {
+  id: string;
+  /** CREATED, SAVED, APPROVED, VOIDED, COMPLETED, or PAYER_ACTION_REQUIRED */
+  status: string;
+  purchase_units: {
+    amount: { value: string; currency_code: string };
+    payments?: {
+      captures?: {
+        id: string;
+        status: string;
+        amount: { value: string; currency_code: string };
+      }[];
+    };
+  }[];
+  payer?: CaptureResult["payer"];
+}
+
+/** Reads an order's current state from PayPal. Used to confirm approval before holding seats, and to settle unclear capture results. */
+export async function getPayPalOrder(orderId: string): Promise<PayPalOrderDetails> {
+  return paypalFetch<PayPalOrderDetails>(`/v2/checkout/orders/${encodeURIComponent(orderId)}`, { method: "GET" });
 }
 
 export async function capturePayPalOrder(orderId: string): Promise<CaptureResult> {
