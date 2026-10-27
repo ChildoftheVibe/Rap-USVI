@@ -25,7 +25,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
   let query = serviceRole
     .from("event_rsvps")
-    .select("created_at, full_name, email, phone, guest_count, paid_cents, status, checked_in_at")
+    .select("created_at, full_name, email, phone, guest_count, paid_cents, sponsor_tier_name, status, checked_in_at")
     .eq("event_id", id)
     .order("created_at", { ascending: false });
   if (activeStatus) {
@@ -44,6 +44,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     "phone",
     "guest_count",
     "paid_cents",
+    "sponsor_tier_name",
     "status",
     "checked_in_at",
   ]);

@@ -98,11 +98,23 @@ interface SponsorshipEmailParams {
   amountCents: number;
   captureId: string;
   completedAt: string;
+  /** Complimentary seats actually reserved for this sponsor. */
+  seats: number;
+  /** Per-seat ticket price, used as the good-faith estimate of each seat's value. */
+  seatValueCents: number | null;
 }
 
 export async function sendSponsorshipReceiptEmail(params: SponsorshipEmailParams): Promise<void> {
   const { resend, from } = requireResend();
   const sponsorName = params.organization || params.contactName;
+  const seatsLine = `${params.seats} seat${params.seats === 1 ? "" : "s"}`;
+  const seatValueCents = params.seats > 0 && params.seatValueCents ? params.seats * params.seatValueCents : 0;
+  const benefitsText =
+    params.seats > 0
+      ? seatValueCents > 0
+        ? `In exchange for this contribution you received ${seatsLine} at the event, with an estimated fair market value of ${formatUsd(seatValueCents)}. The amount of your contribution that may be tax deductible is limited to the amount above that value, ${formatUsd(Math.max(params.amountCents - seatValueCents, 0))}.`
+        : `In exchange for this contribution you received ${seatsLine} at the event. Only the amount above the fair market value of those seats may be tax deductible.`
+      : "If your sponsorship includes other benefits, only the amount that is more than their fair market value may be tax deductible.";
 
   const body = `
     ${badge("Sponsorship received")}
@@ -112,6 +124,7 @@ export async function sendSponsorshipReceiptEmail(params: SponsorshipEmailParams
     <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%; margin:20px 0;">
       ${renderField("Sponsor", escapeHtml(sponsorName))}
       ${renderField("Level", escapeHtml(params.tierName))}
+      ${params.seats > 0 ? renderField("Seats reserved", escapeHtml(`${seatsLine}, under ${params.contactName}`)) : ""}
       ${eventRows(params.event)}
       ${renderField("Amount", formatUsd(params.amountCents))}
       ${renderField("Paid", escapeHtml(formatPaidAt(params.completedAt)))}
@@ -121,9 +134,8 @@ export async function sendSponsorshipReceiptEmail(params: SponsorshipEmailParams
     ${helpLine()}
     <div style="margin-top:20px; border-top:1px solid ${BRAND.outline}; padding-top:16px; font-size:12px; color:${BRAND.inkVariant}; line-height:1.6;">
       ${escapeHtml(site.legalName)} is a tax-exempt organization under Section 501(c)(3) of the Internal Revenue
-      Code (EIN ${escapeHtml(donationContent.ein)}). If your sponsorship includes event seats or other benefits,
-      only the amount that is more than their fair market value may be tax deductible. We will send a written
-      acknowledgment that lists any benefits provided. Please keep this email for your records.
+      Code (EIN ${escapeHtml(donationContent.ein)}). ${escapeHtml(benefitsText)} Please keep this email for
+      your records.
     </div>`;
 
   await resend.emails.send({

@@ -24,6 +24,50 @@ const FOCUS_RING =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2";
 const EMAIL_PATTERN = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
+const BULLET_PATTERN = /^\s*[·•\-*]\s*/;
+const VISIBLE_BENEFITS = 5;
+
+/** Turns a level's description into an intro paragraph plus a bullet list (lines starting with ·, •, - or *). */
+function TierBenefits({ description }: { description: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const lines = description
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const intro = lines.filter((line) => !BULLET_PATTERN.test(line));
+  const bullets = lines.filter((line) => BULLET_PATTERN.test(line)).map((line) => line.replace(BULLET_PATTERN, ""));
+  // Only collapse when it hides a meaningful number of items.
+  const collapsible = bullets.length > VISIBLE_BENEFITS + 1;
+  const shown = collapsible && !expanded ? bullets.slice(0, VISIBLE_BENEFITS) : bullets;
+
+  return (
+    <div className="mt-3">
+      {intro.map((line, i) => (
+        <p key={i} className="text-sm text-on-surface-variant">
+          {line}
+        </p>
+      ))}
+      {shown.length > 0 && (
+        <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-on-surface-variant">
+          {shown.map((item, i) => (
+            <li key={i}>{item}</li>
+          ))}
+        </ul>
+      )}
+      {collapsible && (
+        <button
+          type="button"
+          aria-expanded={expanded}
+          onClick={() => setExpanded((v) => !v)}
+          className={`mt-2 rounded-sm text-sm font-medium text-primary hover:underline ${FOCUS_RING}`}
+        >
+          {expanded ? "Show fewer" : `Show all ${bullets.length} benefits`}
+        </button>
+      )}
+    </div>
+  );
+}
+
 export function SponsorSection({ slug, eventTitle, tiers, salesOpen }: SponsorSectionProps) {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [organization, setOrganization] = useState("");
@@ -84,9 +128,12 @@ export function SponsorSection({ slug, eventTitle, tiers, salesOpen }: SponsorSe
                       {soldOut ? "Fully sponsored" : `${tier.remaining} of ${tier.limit} available`}
                     </p>
                   )}
-                  {tier.description && (
-                    <p className="mt-3 whitespace-pre-line text-sm text-on-surface-variant">{tier.description}</p>
+                  {(tier.seats ?? 0) > 0 && (
+                    <p className="mt-2 inline-block w-max rounded-chip bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                      Includes {tier.seats} {tier.seats === 1 ? "seat" : "seats"}
+                    </p>
                   )}
+                  {tier.description && <TierBenefits description={tier.description} />}
                   <div className="mt-auto pt-5">
                     <button
                       type="button"

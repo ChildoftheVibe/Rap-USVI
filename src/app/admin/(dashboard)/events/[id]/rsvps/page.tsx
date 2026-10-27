@@ -163,7 +163,10 @@ export default async function EventRsvpsPage({
                   </td>
                   <td className="px-4 py-3 text-on-surface-variant">{rsvp.guest_count}</td>
                   <td className="whitespace-nowrap px-4 py-3 text-on-surface-variant">
-                    {rsvp.paid_cents > 0 ? formatUsd(rsvp.paid_cents) : "—"}
+                    {rsvp.paid_cents > 0 ? formatUsd(rsvp.paid_cents) : rsvp.sponsor_tier_name ? "" : "—"}
+                    {rsvp.sponsor_tier_name && (
+                      <span className="block text-xs font-medium text-primary">Sponsor: {rsvp.sponsor_tier_name}</span>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <RsvpStatusSelect id={rsvp.id} eventId={id} status={rsvp.status} name={rsvp.full_name} />

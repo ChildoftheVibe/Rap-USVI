@@ -79,6 +79,7 @@ interface SponsorTierDraft {
   amount: string;
   description: string;
   limit: string;
+  seats: string;
 }
 
 function tierToDraft(tier: SponsorTier): SponsorTierDraft {
@@ -88,6 +89,7 @@ function tierToDraft(tier: SponsorTier): SponsorTierDraft {
     amount: String(tier.amountCents / 100),
     description: tier.description,
     limit: tier.limit === null ? "" : String(tier.limit),
+    seats: String(tier.seats ?? 0),
   };
 }
 
@@ -198,6 +200,7 @@ export function EventForm({ mode, eventId, initial, initialMedia }: EventFormPro
         amount: Number(tier.amount),
         description: tier.description,
         limit: tier.limit.trim() === "" ? null : Number(tier.limit),
+        seats: Number(tier.seats) || 0,
       })),
     };
   }
@@ -468,12 +471,13 @@ export function EventForm({ mode, eventId, initial, initialMedia }: EventFormPro
         <h2 className="text-sm font-semibold uppercase tracking-wide text-on-surface-variant">Sponsor Levels</h2>
         <p className="text-sm text-on-surface-variant">
           Each level shows as a card on the event page with its own PayPal checkout. Leave &ldquo;how many&rdquo;
-          blank for no limit.
+          blank for no limit. &ldquo;Free seats&rdquo; are held for the sponsor automatically and count toward
+          capacity.
         </p>
         {sponsorTiers.map((tier, index) => (
           <fieldset key={index} className="space-y-3 rounded-lg border border-outline-variant p-4">
             <legend className="px-1 text-sm font-medium text-on-surface-variant">Level {index + 1}</legend>
-            <div className="grid gap-3 sm:grid-cols-[2fr_1fr_1fr]">
+            <div className="grid gap-3 sm:grid-cols-[2fr_1fr_1fr_1fr]">
               <div>
                 <label htmlFor={`ev-tier-name-${index}`} className={LABEL_CLASS}>
                   NAME
@@ -514,15 +518,29 @@ export function EventForm({ mode, eventId, initial, initialMedia }: EventFormPro
                   className={FIELD_CLASS}
                 />
               </div>
+              <div>
+                <label htmlFor={`ev-tier-seats-${index}`} className={LABEL_CLASS}>
+                  FREE SEATS
+                </label>
+                <input
+                  id={`ev-tier-seats-${index}`}
+                  type="number"
+                  min={0}
+                  max={20}
+                  value={tier.seats}
+                  onChange={(e) => updateTier(index, { seats: e.target.value })}
+                  className={FIELD_CLASS}
+                />
+              </div>
             </div>
             <div>
               <label htmlFor={`ev-tier-desc-${index}`} className={LABEL_CLASS}>
-                WHAT SPONSORS GET (OPTIONAL)
+                WHAT SPONSORS GET (OPTIONAL). START A LINE WITH · OR - TO MAKE IT A BULLET
               </label>
               <textarea
                 id={`ev-tier-desc-${index}`}
-                rows={2}
-                maxLength={500}
+                rows={6}
+                maxLength={3000}
                 value={tier.description}
                 onChange={(e) => updateTier(index, { description: e.target.value })}
                 className={FIELD_CLASS}
@@ -559,7 +577,7 @@ export function EventForm({ mode, eventId, initial, initialMedia }: EventFormPro
           <button
             type="button"
             onClick={() =>
-              setSponsorTiers((tiers) => [...tiers, { key: "", name: "", amount: "", description: "", limit: "" }])
+              setSponsorTiers((tiers) => [...tiers, { key: "", name: "", amount: "", description: "", limit: "", seats: "0" }])
             }
             className={`rounded-lg border border-outline-variant px-4 py-2 text-sm font-medium text-on-surface-variant transition-colors hover:border-primary hover:text-primary ${FOCUS_RING}`}
           >

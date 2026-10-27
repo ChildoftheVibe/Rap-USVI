@@ -26,14 +26,17 @@ export interface SponsorTier {
   description: string;
   /** How many sponsors can buy this level. Null means no limit. */
   limit: number | null;
+  /** Complimentary event seats included with this level, held automatically at checkout. */
+  seats: number;
 }
 
 export const sponsorTierInputSchema = z.object({
   key: z.string().trim().max(60).regex(/^[a-z0-9-]*$/).optional().or(z.literal("")),
   name: z.string().trim().min(1, "Each sponsor level needs a name").max(120),
   amount: dollarAmountSchema,
-  description: z.string().trim().max(500).optional().or(z.literal("")),
+  description: z.string().trim().max(3000).optional().or(z.literal("")),
   limit: z.number().int().min(1).max(1000).nullable().optional(),
+  seats: z.number().int().min(0).max(20).default(0),
 });
 
 export type SponsorTierInput = z.infer<typeof sponsorTierInputSchema>;

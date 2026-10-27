@@ -34,6 +34,8 @@ export interface DonationRow {
   rsvp_id: string | null;
   seats_claimed_at: string | null;
   attention: string | null;
+  /** Set by the database when a hold partly worked (for example, sponsor seats skipped because the event is full). */
+  hold_note: string | null;
 }
 
 export const MIN_DONATION_CENTS = 500;
