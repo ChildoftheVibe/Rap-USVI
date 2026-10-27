@@ -74,6 +74,7 @@ function toSponsorTiers(inputs: SponsorTierInput[]): SponsorTier[] {
       amountCents: Math.round(tier.amount * 100),
       description: tier.description || "",
       limit: tier.limit ?? null,
+      seats: tier.seats ?? 0,
     };
   });
 }

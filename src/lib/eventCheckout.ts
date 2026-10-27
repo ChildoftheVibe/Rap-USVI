@@ -84,6 +84,9 @@ export async function completeEventPayment(
   attention: string | null = null
 ): Promise<DonationRow> {
   const completedAt = new Date().toISOString();
+  // A note the database left while holding (for example, sponsor seats
+  // skipped because the event is full) still needs a person after payment.
+  const finalAttention = attention ?? row.hold_note ?? null;
 
   const { data: updated } = await supabase
     .from("donations")
@@ -94,7 +97,7 @@ export async function completeEventPayment(
       payer_email: capture.payerEmail,
       payer_name: capture.payerName,
       completed_at: completedAt,
-      attention,
+      attention: finalAttention,
     })
     .eq("id", row.id)
     .eq("status", "pending")
@@ -131,6 +134,7 @@ export async function completeEventPayment(
           }
         }
       } else if (finalRow.purpose === "sponsorship") {
+        const seats = finalRow.rsvp_id ? (finalRow.quantity ?? 0) : 0;
         await sendSponsorshipReceiptEmail({
           event,
           contactName: name,
@@ -140,7 +144,15 @@ export async function completeEventPayment(
           amountCents: finalRow.amount_cents,
           captureId: capture.captureId,
           completedAt,
+          seats,
+          seatValueCents: event.ticket_price_cents,
         });
+        if (finalRow.rsvp_id) {
+          await supabase
+            .from("event_rsvps")
+            .update({ notified_at: new Date().toISOString() })
+            .eq("id", finalRow.rsvp_id);
+        }
       }
       await supabase.from("donations").update({ receipt_sent_at: new Date().toISOString() }).eq("id", row.id);
     } catch (emailError) {
@@ -160,7 +172,7 @@ export async function completeEventPayment(
       quantity: finalRow.quantity,
       amountCents: finalRow.amount_cents,
       captureId: capture.captureId,
-      attention,
+      attention: finalAttention,
     });
   } catch (err) {
     console.error("Event payment completed but staff notification failed", err);

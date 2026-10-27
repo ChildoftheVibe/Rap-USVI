@@ -93,6 +93,8 @@ export interface EventRsvpRow {
   notify_error: string | null;
   promoted_at: string | null;
   paid_cents: number;
+  /** Set when these seats came with a sponsorship level. */
+  sponsor_tier_name: string | null;
 }
 
 /** URL-safe slug: lowercase, hyphen-separated, ASCII alphanumerics only. */
