@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { EventTagline } from "@/components/events/EventTagline";
 
 export interface PopupEventData {
   slug: string;
   title: string;
+  tagline: string | null;
   popup_headline: string | null;
   popup_body: string | null;
   popup_cta_label: string;
@@ -76,6 +78,7 @@ export function EventPopup({ event }: { event: PopupEventData | null }) {
               </span>
             </button>
           </div>
+          <EventTagline text={event.tagline} className="mb-3 text-2xl text-primary" />
           {event.popup_body && <p className="mb-6 text-on-surface-variant">{event.popup_body}</p>}
           <Link href={`/events/${event.slug}`} onClick={close} className="btn btn-md btn-primary w-full">
             {event.popup_cta_label}

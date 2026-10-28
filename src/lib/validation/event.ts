@@ -50,6 +50,8 @@ const localDateTimeSchema = z
 export const eventSchema = z
   .object({
     title: z.string().trim().min(1, "Title is required").max(200),
+    /** Short phrase shown in the bold italic tagline face wherever the event appears. */
+    tagline: z.string().trim().max(80, "Keep the tagline to 80 characters or fewer").optional().or(z.literal("")),
     slug: z
       .string()
       .trim()

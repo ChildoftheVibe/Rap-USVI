@@ -85,6 +85,7 @@
 
   --font-headline: var(--font-eb-garamond);
   --font-body: var(--font-public-sans);
+  --font-tagline: var(--font-playfair-display);
 }
 
 :root {

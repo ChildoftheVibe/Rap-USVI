@@ -16,6 +16,7 @@ export const dynamic = "force-dynamic";
 function toFormInitial(event: EventRow): EventFormInitial {
   return {
     title: event.title,
+    tagline: event.tagline ?? "",
     slug: event.slug,
     description: event.description,
     locationName: event.location_name,

@@ -2,10 +2,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { formatEventDate, formatEventTime } from "@/lib/events";
 import type { EventRow } from "@/lib/events";
+import { EventTagline } from "@/components/events/EventTagline";
 
 type EventCardData = Pick<
   EventRow,
-  "slug" | "title" | "start_at" | "location_name" | "banner_url" | "banner_alt"
+  "slug" | "title" | "tagline" | "start_at" | "location_name" | "banner_url" | "banner_alt"
 >;
 
 export function EventCard({ event }: { event: EventCardData }) {
@@ -36,6 +37,7 @@ export function EventCard({ event }: { event: EventCardData }) {
           {formatEventDate(event.start_at)}
         </p>
         <h3 className="font-[family-name:var(--font-headline)] text-xl text-primary">{event.title}</h3>
+        <EventTagline text={event.tagline} className="text-lg text-primary" />
         {event.location_name && <p className="text-sm text-on-surface-variant">{event.location_name}</p>}
         <p className="mt-auto pt-2 text-sm font-medium text-primary">
           {formatEventTime(event.start_at)} AST · View details →

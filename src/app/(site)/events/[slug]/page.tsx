@@ -11,6 +11,7 @@ import { EventPayPalProvider } from "@/components/events/EventPayPalProvider";
 import { getSponsorTierSales } from "@/lib/eventCheckout";
 import { sanitizeStoredDescription } from "@/lib/sanitizeHtml";
 import { site } from "@/lib/content";
+import { EventTagline } from "@/components/events/EventTagline";
 
 // Capacity/spots-left must always be live, and this must never depend on
 // Supabase being reachable at build time — same reasoning as the admin pages.
@@ -102,6 +103,10 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       <EventPayPalProvider enabled={isTicketed || sponsorTierViews.length > 0}>
       <div className="mx-auto grid max-w-container-max grid-cols-1 gap-12 px-margin-mobile py-16 md:px-margin-desktop lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
+          <EventTagline
+            text={event.tagline}
+            className="border-l-4 border-harvest-gold pl-4 text-3xl text-primary md:text-4xl"
+          />
           <div className="flex flex-wrap items-center gap-3 text-caribbean-azure">
             <span className="material-symbols-outlined" aria-hidden="true">
               calendar_month
