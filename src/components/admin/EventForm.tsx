@@ -45,6 +45,7 @@ const POPUP_IMAGE_LABELS: Record<PopupImageSource, string> = {
 
 export interface EventFormInitial {
   title: string;
+  tagline: string;
   slug: string;
   description: string;
   locationName: string;
@@ -95,6 +96,7 @@ function tierToDraft(tier: SponsorTier): SponsorTierDraft {
 
 const DEFAULTS: EventFormInitial = {
   title: "",
+  tagline: "",
   slug: "",
   description: "",
   locationName: "",
@@ -133,6 +135,7 @@ export function EventForm({ mode, eventId, initial, initialMedia }: EventFormPro
   const values = initial ?? DEFAULTS;
 
   const [title, setTitle] = useState(values.title);
+  const [tagline, setTagline] = useState(values.tagline);
   const [slug, setSlug] = useState(values.slug);
   const [slugTouched, setSlugTouched] = useState(mode === "edit");
   const [description, setDescription] = useState(values.description);
@@ -174,6 +177,7 @@ export function EventForm({ mode, eventId, initial, initialMedia }: EventFormPro
   function buildPayload() {
     return {
       title,
+      tagline,
       slug,
       description,
       locationName,
@@ -293,6 +297,28 @@ export function EventForm({ mode, eventId, initial, initialMedia }: EventFormPro
             onChange={(e) => handleTitleChange(e.target.value)}
             className={FIELD_CLASS}
           />
+        </div>
+        <div>
+          <label htmlFor="ev-tagline" className={LABEL_CLASS}>
+            TAGLINE (optional, shown in bold italic on the event page, event cards and pop-up)
+          </label>
+          <input
+            id="ev-tagline"
+            value={tagline}
+            maxLength={80}
+            onChange={(e) => setTagline(e.target.value)}
+            placeholder="Time to Heal"
+            aria-describedby={tagline.trim() ? "ev-tagline-preview" : undefined}
+            className={FIELD_CLASS}
+          />
+          {tagline.trim() && (
+            <p id="ev-tagline-preview" className="mt-2 text-sm text-on-surface-variant">
+              Preview:{" "}
+              <span className="font-[family-name:var(--font-tagline)] text-lg font-extrabold italic text-primary">
+                {tagline.trim()}
+              </span>
+            </p>
+          )}
         </div>
         <div>
           <label htmlFor="ev-slug" className={LABEL_CLASS}>

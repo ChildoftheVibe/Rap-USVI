@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { formatEventDateBadge, formatEventTime } from "@/lib/events";
 import type { EventRow } from "@/lib/events";
+import { EventTagline } from "@/components/events/EventTagline";
 
 export function EventCarousel({ events }: { events: EventRow[] }) {
   const trackRef = useRef<HTMLDivElement>(null);
@@ -116,6 +117,7 @@ function EventSlide({ event }: { event: EventRow }) {
         <h3 className="mb-4 font-[family-name:var(--font-headline)] text-3xl text-primary md:text-4xl">
           {event.title}
         </h3>
+        <EventTagline text={event.tagline} className="mb-6 text-2xl text-primary md:text-3xl" />
         <div className="mb-8 flex flex-wrap items-center gap-3 text-caribbean-azure">
           <span className="material-symbols-outlined" aria-hidden="true">
             location_on

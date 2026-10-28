@@ -22,7 +22,7 @@ async function getActivePopupEvent(): Promise<PopupEventData | null> {
     const { data } = await supabase
       .from("events")
       .select(
-        "slug, title, popup_headline, popup_body, popup_cta_label, popup_image_source, banner_url, flyer_3x5_url, flyer_4x5_url, flyer_9x16_url"
+        "slug, title, tagline, popup_headline, popup_body, popup_cta_label, popup_image_source, banner_url, flyer_3x5_url, flyer_4x5_url, flyer_9x16_url"
       )
       .eq("status", "published")
       .eq("popup_enabled", true)
@@ -37,6 +37,7 @@ async function getActivePopupEvent(): Promise<PopupEventData | null> {
     return {
       slug: data.slug,
       title: data.title,
+      tagline: data.tagline,
       popup_headline: data.popup_headline,
       popup_body: data.popup_body,
       popup_cta_label: data.popup_cta_label,

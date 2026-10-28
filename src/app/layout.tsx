@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { EB_Garamond, Public_Sans } from "next/font/google";
+import { EB_Garamond, Playfair_Display, Public_Sans } from "next/font/google";
 import { PostHogProvider } from "@/components/analytics/PostHogProvider";
 import { CookieConsentBanner } from "@/components/analytics/CookieConsentBanner";
 import CrisisSupport from "@/components/layout/CrisisSupport";
@@ -11,6 +11,14 @@ const ebGaramond = EB_Garamond({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   style: ["normal", "italic"],
+});
+
+/** Display face for event taglines only, so they stand out from headlines and body text. */
+const playfairDisplay = Playfair_Display({
+  variable: "--font-playfair-display",
+  subsets: ["latin"],
+  weight: "800",
+  style: "italic",
 });
 
 const publicSans = Public_Sans({
@@ -43,7 +51,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${ebGaramond.variable} ${publicSans.variable} scroll-smooth`}>
+    <html lang="en" className={`${ebGaramond.variable} ${playfairDisplay.variable} ${publicSans.variable} scroll-smooth`}>
       <head>
         <link
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=block"

@@ -82,6 +82,7 @@ function toSponsorTiers(inputs: SponsorTierInput[]): SponsorTier[] {
 function toEventRecord(data: EventInput) {
   return {
     title: data.title,
+    tagline: data.tagline || null,
     slug: data.slug,
     description: data.description ? sanitizeEventDescription(data.description) : "",
     location_name: data.locationName || "",

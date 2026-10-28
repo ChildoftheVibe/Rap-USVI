@@ -5,6 +5,7 @@ import { EventCarousel } from "@/components/events/EventCarousel";
 import { formatEventDateBadge, formatEventTime } from "@/lib/events";
 import type { EventRow } from "@/lib/events";
 import { sanitizeStoredDescription, withSanitizedDescription } from "@/lib/sanitizeHtml";
+import { EventTagline } from "@/components/events/EventTagline";
 
 // Same filter as the all-events page: published events, ending in the future,
 // soonest first — so this section always mirrors what's live on /events.
@@ -114,6 +115,7 @@ export async function CommunityEvent() {
             <h3 className="mb-4 font-[family-name:var(--font-headline)] text-3xl text-primary md:text-4xl">
               {pastEvent.title}
             </h3>
+            <EventTagline text={pastEvent.tagline} className="mb-6 text-2xl text-primary md:text-3xl" />
             <div className="mb-8 flex flex-wrap items-center gap-3 text-caribbean-azure">
               <span className="material-symbols-outlined" aria-hidden="true">
                 location_on

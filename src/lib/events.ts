@@ -15,6 +15,7 @@ export interface EventRow {
   created_by: string | null;
   slug: string;
   title: string;
+  tagline: string | null;
   description: string;
   location_name: string;
   location_address: string;
